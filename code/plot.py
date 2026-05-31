@@ -7,35 +7,36 @@ font = {
     'Times New Roman': 345,
     'Arial': 69,
     '宋体': 1,
-    '微软雅黑': 55
+    '微软雅黑': 55,
+    'inner': 5,
+    'outer': 10
 }
 
 class LayConfig:
 
     def __init__(self,
-                 
-                 x_axis_title       = 'x',
-                 y_axis_title       = 'y',
-                 x_axis_font        = 'Times New Roman',
-                 y_axis_font        = 'Times New Roman',
-                 legend_font        = 'Times New Roman',
-                 x_axis_font_size   = 36,
-                 y_axis_font_size   = 36,
-                 legend_font_size   = 26,
-                 x_axis_thickness   = 3,
-                 y_axis_thickness   = 3,
-                 x_axis_bold        = 1,
-                 y_axis_bold        = 1,
-                 x_axis_label_pt    = 26,
-                 y_axis_label_pt    = 26,
-                 x_axis_label_font  = 'Times New Roman',
-                 y_axis_label_font  = 'Times New Roman',
-                 x_axis_ticks       = 5,
-                 y_axis_ticks       = 5,
-                 x_from             = None,
-                 x_to               = None,
-                 y_from             = None,
-                 y_to               = None
+                 x_axis_title       = 'x',                  # X轴标题文字
+                 y_axis_title       = 'y',                  # Y轴标题文字
+                 x_axis_font        = 'Times New Roman',    # X轴标题字体
+                 y_axis_font        = 'Times New Roman',    # Y轴标题字体
+                 legend_font        = 'Times New Roman',    # 图例字体
+                 x_axis_font_size   = 36,                   # X轴标题字体大小
+                 y_axis_font_size   = 36,                   # Y轴标题字体大小
+                 legend_font_size   = 26,                   # 图例字体大小
+                 x_axis_thickness   = 3,                    # X轴线条粗细
+                 y_axis_thickness   = 3,                    # Y轴线条粗细
+                 x_axis_bold        = 1,                    # X轴标题是否加粗（1=加粗，0=不加粗）
+                 y_axis_bold        = 1,                    # Y轴标题是否加粗（1=加粗，0=不加粗）
+                 x_axis_label_pt    = 26,                   # X轴刻度标签字体大小
+                 y_axis_label_pt    = 26,                   # Y轴刻度标签字体大小
+                 x_axis_label_font  = 'Times New Roman',    # X轴刻度标签字体
+                 y_axis_label_font  = 'Times New Roman',    # Y轴刻度标签字体
+                 x_axis_ticks       = 'inner',              # X轴刻度朝向
+                 y_axis_ticks       = 'outer',              # Y轴刻度朝向
+                 x_from             = None,                 # X轴起始值（None表示自动计算）
+                 x_to               = None,                 # X轴结束值（None表示自动计算）
+                 y_from             = None,                 # Y轴起始值（None表示自动计算）
+                 y_to               = None                  # Y轴结束值（None表示自动计算）
                  ):
         
         self.x_axis_title = x_axis_title
