@@ -258,7 +258,6 @@ def plot_time_x(input_file, output_file1, output_file2):
     plot2.set_float('line.width', 3) 
     plot2.color = 'black'
 
-
     gp2.lname = 'Current vs Time'
 
     # 设置横纵坐标字体和大小
@@ -292,21 +291,9 @@ def plot_two_lines(input_file,input_file1,output_file):
     # 写：固定目录里的文件
     output_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file)  
     
-     # 根据文件类型读取数据
-    if 'csv' in input_file:#判断是不是csv文件
-        df = pd.read_csv(input_path)
-    elif 'txt' in input_file:#判断是不是txt文件
-        df = pd.read_csv(input_path,sep='\t')
-    elif 'xlsx' in input_file:#判断是不是xlsx文件
-        df = pd.read_excel(input_path)
+    df = read_data(input_path)
     
-     # 根据文件类型读取数据
-    if 'csv' in input_file:#判断是不是csv文件
-        df1 = pd.read_csv(input_path1)
-    elif 'txt' in input_file:#判断是不是txt文件
-        df1 = pd.read_csv(input_path1,sep='\t')
-    elif 'xlsx' in input_file:#判断是不是xlsx文件
-        df1 = pd.read_excel(input_path1)
+    df1 = read_data(input_path1)
 
     time_ns = df['Time(s)'] * 1e9
 
@@ -343,45 +330,11 @@ def plot_two_lines(input_file,input_file1,output_file):
     plot2.set_float('line.width', 3)  # 设置线宽为 3
     plot2.color = 'red'
 
-    #设置横纵坐标标题
-    lay1.axis('x').title = 'Time (nsec)'
-    lay1.axis('y').title = 'Voltage (V)'
-
-    #设置横纵坐标字体和大小
-    xb = lay1.label('xb')
-    xb.set_int('font', 345)  # 设置字体为 345 对应  
-    xb.set_int('fsize', 36)  # 设置字体大小为 36
-
-    yl = lay1.label('yl')
-    yl.set_int('font', 345)  # 设置字体为 345 对应
-    yl.set_int('fsize', 36)  # 设置字体大小为 36
-
-    le = lay1.label('legend')
-    le.set_int('font', 345)  # 设置字体为 345 对应字体为Times New Roman
-    le.set_int('fsize', 26)  # 设置字体大小为 26
-
-    #调整坐标轴线厚度
-    op.lt_exec('layer.x.thickness=3;')
-    op.lt_exec('layer.y.thickness=3;')
-
-    #调整坐标轴字体
-    op.lt_exec('layer.x.label.font=font(times new roman);')
-    op.lt_exec('layer.y.label.font=font(times new roman);')
-
-    #坐标轴字体是否加粗1代表加粗，0代表不加粗
-    op.lt_exec('layer.x.label.bold=1;')
-    op.lt_exec('layer.y.label.bold=1;')
-
-    #坐标轴数字大小
-    op.lt_exec('layer.x.label.pt=26;')
-    op.lt_exec('layer.y.label.pt=26;')
+    lay_set(lay1,LayConfig())
 
     gp1.lname = 'Voltage vs Voltage1'
 
     op.lt_exec('page.autoSize=1;')
-    #设置第一个图的名称
-    #刷新该图层，使设置生效
-    lay1.rescale()
 
     #导出为图片
     g = op.find_graph('graph1')
@@ -402,13 +355,7 @@ def plot_two_in_graph(input_file,output_file):
     input_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', input_file)
     output_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file) 
 
-    # 根据文件类型读取数据
-    if 'csv' in input_file:#判断是不是csv文件
-        df = pd.read_csv(input_path)
-    elif 'txt' in input_file:#判断是不是txt文件
-        df = pd.read_csv(input_path,sep='\t')
-    elif 'xlsx' in input_file:#判断是不是xlsx文件
-        df = pd.read_excel(input_path)
+    df = read_data(input_path)
     
     time_ns = df['Time(s)'] * 1e9 #df['Time(s)']表达的是我取的Time(s)这一列的数据，这一列每一行的值都会乘以1e9
 
