@@ -198,6 +198,7 @@ def template(input_file,output_file):
 
 #绘制两个图的示例
 def plot_time_x(input_file, output_file1, output_file2):
+
     # 读：固定目录里的文件，这里大家要修改为自己文件夹所在的路径，不然会读不到数据文件
     input_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', input_file)   
 
@@ -205,13 +206,7 @@ def plot_time_x(input_file, output_file1, output_file2):
     output_path1 = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file1)  
     output_path2 = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file2)
 
-    # 根据文件类型读取数据
-    if 'csv' in input_file:#判断是不是csv文件
-        df = pd.read_csv(input_path)
-    elif 'txt' in input_file:#判断是不是txt文件
-        df = pd.read_csv(input_path,sep='\t')
-    elif 'xlsx' in input_file:#判断是不是xlsx文件
-        df = pd.read_excel(input_path)
+    df = read_data(input_path)
     
     time_ns = df['Time(s)'] * 1e9 #df['Time(s)']表达的是我取的Time(s)这一列的数据，这一列每一行的值都会乘以1e9
 
@@ -249,49 +244,11 @@ def plot_time_x(input_file, output_file1, output_file2):
     plot1.set_float('line.width', 3)  # 设置线宽为 1.5
     plot1.color = 'black' # 设置线条颜色为黑色
 
-    lay1.axis('x').title = 'Time (nsec)'#x轴的名字为Time (nsec)
-    lay1.axis('y').title = 'Voltage (V)'#y轴的名字为Voltage (V)
 
     gp1.lname = 'Voltage vs Time'#该图片的名字为Voltage vs Time
 
-    # 设置横纵坐标标题字体和大小
-    #xb代表x bottom 也就是位于图片下面的x轴的标题
-    #xt代表x top 也就是位于图片上面的x轴的标题
-    #yl代表y left 也就是位于图片左边的y轴的标题
-    #yr代表y right 也就是位于图片右边的y轴的标题
-    
-    xb = lay1.label('xb')#获取xb这个对象，也即是下边x轴的标题，方便对其进行字体或者大小的改变
-    xb.set_int('font', 345)#改变xb这个对象的字体，345代表是Times New Romans, 69代表是Arial, 1代表是宋体, 55代表是微软雅黑
-    xb.set_int('fsize', 36)#改变xb这个对象的字体大小
+    lay_set(lay1,LayConfig())
 
-    yl = lay1.label('yl')#获取yl这个对象，也即是左边y轴的标题，方便对其进行字体或者大小的改变
-    yl.set_int('font', 345)#改变yl这个对象的字体，345代表是Times New Romans, 69代表是Arial, 1代表是宋体, 55代表是微软雅黑
-    yl.set_int('fsize', 36)#改变yl这个对象的字体大小
-
-    le = lay1.label('legend')#获取le这个对象，也即是右上角的标题，方便对其进行字体或者大小的改变
-    le.set_int('font', 345)  # 设置字体为345代表是Times New Romans, 69代表是Arial, 1代表是宋体, 55代表是微软雅黑
-    le.set_int('fsize', 26)  # 设置字体大小为 20
-
-    #调整坐标轴线厚度
-    op.lt_exec('layer.x.thickness=3;')
-    op.lt_exec('layer.y.thickness=3;')
-
-    #调整坐标轴字体
-    op.lt_exec('layer.x.label.font=font(times new roman);')
-    op.lt_exec('layer.y.label.font=font(times new roman);')
-
-    #坐标轴字体是否加粗1代表加粗，0代表不加粗
-    op.lt_exec('layer.x.label.bold=1;')
-    op.lt_exec('layer.y.label.bold=1;')
-
-    #坐标轴数字大小
-    op.lt_exec('layer.x.label.pt=26;')
-    op.lt_exec('layer.y.label.pt=26;')
-
-    op.lt_exec('page.autoSize=1;')
-    
-    lay1.rescale()#刷新有关该图层的设置
-    
     # 图2
     gp2 = op.new_graph()
     lay2 = gp2[0]
@@ -301,42 +258,11 @@ def plot_time_x(input_file, output_file1, output_file2):
     plot2.set_float('line.width', 3) 
     plot2.color = 'black'
 
-    lay2.axis('x').title = 'Time (nsec)'
-    lay2.axis('y').title = 'Current (A)'
 
     gp2.lname = 'Current vs Time'
 
     # 设置横纵坐标字体和大小
-    xb2 = lay2.label('xb')
-    xb2.set_int('font', 345)
-    xb2.set_int('fsize', 36)
-
-    yl2 = lay2.label('yl')
-    yl2.set_int('font', 345)
-    yl2.set_int('fsize', 36)
-
-    le2 = lay2.label('legend')
-    le2.set_int('font', 345)  # 设置字体为 345 对应字体为Times New Roman
-    le2.set_int('fsize', 26)  # 设置字体大小为 28
-
-    op.lt_exec('layer.x.thickness=3;')
-    op.lt_exec('layer.y.thickness=3;')
-
-    #调整坐标轴字体
-    op.lt_exec('layer.x.label.font=font(times new roman);')
-    op.lt_exec('layer.y.label.font=font(times new roman);')
-
-    #坐标轴字体是否加粗1代表加粗，0代表不加粗
-    op.lt_exec('layer.x.label.bold=1;')
-    op.lt_exec('layer.y.label.bold=1;')
-
-    #坐标轴数字大小
-    op.lt_exec('layer.x.label.pt=26;')
-    op.lt_exec('layer.y.label.pt=26;')
-
-    op.lt_exec('page.autoSize=1;')
-    
-    lay2.rescale()
+    lay_set(lay2,LayConfig())
     
     # 找到绘制的图片
     g1 = op.find_graph('graph1')
