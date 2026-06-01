@@ -11,6 +11,7 @@ FONT = {
     'outer': 10
 }
 
+# 定义一个类来存储图层配置参数
 class LayConfig:
 
     def __init__(
@@ -70,7 +71,17 @@ class LayConfig:
         self.y_from = y_from
         self.y_to = y_to
 
-
+# 函数功能说明：配置一个图层的参数
+# 参数说明：
+# lay: 图层对象
+# config: LayConfig类的实例，包含了图层的各种配置参数
+# 使用示例：
+# 生成两种配置,分别对应两个图层lay1和lay2,可以在LayConfig的构造函数中设置不同的参数来创建不同的配置实例,可以只改部分值,其他值就为默认值,例如：
+# lay_config1 = LayConfig(x_axis_title='Time (s)')
+# lay_config2 = LayConfig(x_axis_title='good ',y_axis_title='bad', y_axis_bold=0)
+# 给lay1和lay2设置参数
+# po.lay_set(lay1, lay_config1)
+# po.lay_set(lay2, lay_config2)
 def lay_set(lay, config):
 
     # 设置坐标轴标题
@@ -118,17 +129,35 @@ def lay_set(lay, config):
     if config.y_to is not None:
         lay.set_float('y.to', config.y_to)
 
-def plot_set(data, lay, colx, coly, color='black', width:float = 3,type='l'):
+# 函数功能说明：在一个图层中绘制一条线
+def plot_set(
+        data,               #worksheet数据源
+        lay,                #图层对象
+        colx,               #worksheet中作为x轴数据的列名
+        coly,               #worksheet中作为y轴数据的列名
+        color='black',      #线条颜色
+        width:float = 3,    #线条宽度
+        type='l'            #图表类型，'l'(Line Plot) 's'(Scatter Plot) 'y' (Line Symbols) 'c' (Column) '?' auto(template)
+        ):
 
     plot = lay.add_plot(data, colx=colx, coly=coly, type=type)
     plot.set_float('line.width', width)  # 设置线宽
     plot.color = color
 
-def graph_save(graph,path,width:int = 0,ratio:int = 0,name='graph'):
+# 函数功能说明：保存图像
+def graph_save(
+        graph,              #图对象
+        path,               #保存路径
+        width:int = 0,      #图像宽度，单位为像素，0表示使用默认宽度
+        ratio:int = 0,      #图像宽高比，单位为百分比，0表示使用默认宽高比
+        name='graph'        #图像名称
+        ):
+    
     graph.name = name
     graph.set_float('autoSize',1)
     op.find_graph(graph.name).save_fig(path,replace=True,width=width, ratio=ratio)
 
+# 函数功能说明：读取数据，根据文件类型自动选择读取方式
 def read_data(input_file):
 
     if 'csv' in input_file:#判断是不是csv文件
@@ -140,6 +169,10 @@ def read_data(input_file):
 
     return df
  
+# 函数功能说明：保存项目
+# 参数说明：
+# name: 项目名称
+# path: 项目保存路径
 def project_save(name,path):
 
     path1 = os.path.join(path, name)

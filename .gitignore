@@ -1,0 +1,4 @@
+.vscode/
+__pycache__/
+data_deal.py
+raw_data.csv
