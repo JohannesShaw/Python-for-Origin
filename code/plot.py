@@ -1,144 +1,21 @@
-import pandas as pd
+import pyorigin as po
 import originpro as op
-#这是用来合并文件路径的库，只调用了里面的os.path.join（）函数
+import pandas as pd
 import os
 
-font = {
-    'Times New Roman': 345,
-    'Arial': 69,
-    '宋体': 1,
-    '微软雅黑': 55,
-    'inner': 5,
-    'outer': 10
-}
-
-class LayConfig:
-
-    def __init__(self,
-                 x_axis_title       = 'x',                  # X轴标题文字
-                 y_axis_title       = 'y',                  # Y轴标题文字
-                 x_axis_font        = 'Times New Roman',    # X轴标题字体
-                 y_axis_font        = 'Times New Roman',    # Y轴标题字体
-                 legend_font        = 'Times New Roman',    # 图例字体
-                 x_axis_font_size   = 36,                   # X轴标题字体大小
-                 y_axis_font_size   = 36,                   # Y轴标题字体大小
-                 legend_font_size   = 26,                   # 图例字体大小
-                 x_axis_thickness   = 3,                    # X轴线条粗细
-                 y_axis_thickness   = 3,                    # Y轴线条粗细
-                 x_axis_bold        = 1,                    # X轴标题是否加粗（1=加粗，0=不加粗）
-                 y_axis_bold        = 1,                    # Y轴标题是否加粗（1=加粗，0=不加粗）
-                 x_axis_label_pt    = 26,                   # X轴刻度标签字体大小
-                 y_axis_label_pt    = 26,                   # Y轴刻度标签字体大小
-                 x_axis_label_font  = 'Times New Roman',    # X轴刻度标签字体
-                 y_axis_label_font  = 'Times New Roman',    # Y轴刻度标签字体
-                 x_axis_ticks       = 'inner',              # X轴刻度朝向
-                 y_axis_ticks       = 'outer',              # Y轴刻度朝向
-                 x_from             = None,                 # X轴起始值（None表示自动计算）
-                 x_to               = None,                 # X轴结束值（None表示自动计算）
-                 y_from             = None,                 # Y轴起始值（None表示自动计算）
-                 y_to               = None                  # Y轴结束值（None表示自动计算）
-                 ):
-        
-        self.x_axis_title = x_axis_title
-        self.y_axis_title = y_axis_title
-
-        self.x_axis_font = font[x_axis_font]
-        self.y_axis_font = font[y_axis_font]
-        self.legend_font = font[legend_font]
-
-        self.x_axis_font_size = x_axis_font_size
-        self.y_axis_font_size = y_axis_font_size
-        self.legend_font_size = legend_font_size
-
-        self.x_axis_thickness = x_axis_thickness
-        self.y_axis_thickness = y_axis_thickness
-
-        self.x_axis_bold = x_axis_bold
-        self.y_axis_bold = y_axis_bold
-
-        self.x_axis_label_pt = x_axis_label_pt
-        self.y_axis_label_pt = y_axis_label_pt
-
-        self.x_axis_label_font = font[x_axis_label_font]
-        self.y_axis_label_font = font[y_axis_label_font]
-
-        self.x_axis_ticks = x_axis_ticks
-        self.y_axis_ticks = y_axis_ticks
-
-        self.x_from = x_from
-        self.x_to = x_to
-        self.y_from = y_from
-        self.y_to = y_to
-
-
-def lay_set(lay, config):
-
-    # 设置坐标轴标题
-    lay.axis('x').title = config.x_axis_title
-    lay.axis('y').title = config.y_axis_title
-
-    # 字体 & 大小
-    lay.label('xb').set_int('font', config.x_axis_font)
-    lay.label('xb').set_int('fsize', config.x_axis_font_size)
-    
-    lay.label('yl').set_int('font', config.y_axis_font)
-    lay.label('yl').set_int('fsize', config.y_axis_font_size)
-
-    lay.label('legend').set_int('font', config.legend_font)
-    lay.label('legend').set_int('fsize', config.legend_font_size)
-
-    # 坐标轴线厚度
-    lay.set_float('x.thickness', config.x_axis_thickness)
-    lay.set_float('y.thickness', config.y_axis_thickness)
-    
-    # 坐标轴加粗：True→1，False→0
-    lay.set_float('x.label.bold', config.x_axis_bold )
-    lay.set_float('y.label.bold', config.y_axis_bold )
-
-    # 刻度数字大小 & 字体
-    lay.set_float('x.label.pt', config.x_axis_label_pt)
-    lay.set_float('y.label.pt', config.y_axis_label_pt)
-    lay.set_float('x.label.font', config.x_axis_label_font)
-    lay.set_float('y.label.font', config.y_axis_label_font)
-
-    # 刻度朝向
-    lay.set_float('x.ticks', config.x_axis_ticks)
-    lay.set_float('y.ticks', config.y_axis_ticks)
-
-    # 自动设置坐标轴的范围
-    lay.rescale()
-
-    # 轴范围
-    if config.x_from is not None:
-        lay.set_float('x.from', config.x_from)
-    if config.x_to is not None:
-        lay.set_float('x.to', config.x_to)
-    if config.y_from is not None:
-        lay.set_float('y.from', config.y_from)
-    if config.y_to is not None:
-        lay.set_float('y.to', config.y_to)
-
-
-def read_data(input_file):
-
-    if 'csv' in input_file:#判断是不是csv文件
-        df = pd.read_csv(input_file)
-    elif 'txt' in input_file:#判断是不是txt文件
-        df = pd.read_csv(input_file,sep='\t')
-    elif 'xlsx' in input_file:#判断是不是xlsx文件
-        df = pd.read_excel(input_file)
-
-    return df
- 
 
 def template(input_file,output_file):
 
-    # 读：固定目录里的文件，这里大家要修改为自己文件夹所在的路径，不然会读不到数据文件
+    # 设置读取文件的路径
     input_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', input_file)
-    # 写：固定目录里的文件，这里大家要修改为自己文件夹所在的路径，不然会把图片输出到错误的位置
+
+    # 设置输出图片的路径
     output_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file)
 
-    df = read_data(input_path)
+    # 设置保存origin工程文件的路径
+    project_path = r'D:\VsCode File\Python Code\data_analysis\code'
+
+    df = po.read_data(input_path)
 
     # 打开origin软件
     op.set_show(True)  
@@ -159,42 +36,29 @@ def template(input_file,output_file):
 
     #将数据加载到表格里
     wks.from_df(pd.DataFrame({
-        'Time(ns)': time_ns,#将这一列数据重新在origin sheet里重新命名为Time(ns)
-        'Voltage(V)': df['Vout(V)'],#将这一列数据重新在origin sheet里重新命名为Voltage(V)
-        'Current(A)': df['Iout(A)']#将这一列数据重新在origin sheet里重新命名为Current(A)
+        'Time(ns)': time_ns,            # 将这一列数据重新在origin sheet里重新命名为Time(ns)
+        'Voltage(V)': df['Vout(V)'],    # 将这一列数据重新在origin sheet里重新命名为Voltage(V)
+        'Current(A)': df['Iout(A)']     # 将这一列数据重新在origin sheet里重新命名为Current(A)
     }))
 
-    gp1 = op.new_graph()
-    lay1 = gp1[0] #取该图的第一个图层绘图
-    #开始画图
-    #x轴的数据来自于Time(ns)列
-    #y轴的数据来自于Voltage(V)列
-    #type表示要绘制线条形式
+
+    gp1 = op.new_graph()                # 新建一个图(该图默认只有一个图层)
+    lay1 = gp1[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
+
     #type(str): 'l'(Line Plot) 's'(Scatter Plot) 'y' (Line Symbols) 'c' (Column) '?' auto(template)
-    plot1 = lay1.add_plot(wks, colx='Time(ns)', coly='Voltage(V)',type = 'l')
 
-    plot1.set_float('line.width', 3)  # 设置线宽为 1.5
-    plot1.color = 'red' # 设置线条颜色为黑色
+    po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='blue', width=3, type='l')
 
-    lay_set(lay1,LayConfig())
+    po.lay_set(lay1,po.LayConfig())
     
-    # 找到绘制的图片
-    gp1.lname = 'Voltage vs Time'#该图片的名字为Voltage vs Time
-
-    gp1.set_float('autoSize',1)
-
-    g1 = op.find_graph('graph1')
-    # 导出为图片
-    # 该函数还有很多参数，可以设置导出图片的宽度等等，大家可以点进函数看看
-    g1.save_fig(output_path)
+    po.graph_save(gp1,output_path)
   
-    # 将origin工程文件保存到指定位置，名字默认为'Analysis_Result.opju'(可自己修改)，这里大家要修改为自己想保存的路径，
-    op.save(os.path.join(r'D:\VsCode File\Python Code\data_analysis\code', 'Analysis_Result.opju'))
+    po.project_save('template.opju', project_path)
 
-    #op.exit()  # 关闭 Origin 应用程序
+    # 关闭 Origin 应用程序
+    #op.exit()                           
     
     print("绘图完成")
-
 
 #绘制两个图的示例
 def plot_time_x(input_file, output_file1, output_file2):
@@ -206,7 +70,7 @@ def plot_time_x(input_file, output_file1, output_file2):
     output_path1 = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file1)  
     output_path2 = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file2)
 
-    df = read_data(input_path)
+    df = po.read_data(input_path)
     
     time_ns = df['Time(s)'] * 1e9 #df['Time(s)']表达的是我取的Time(s)这一列的数据，这一列每一行的值都会乘以1e9
 
@@ -247,7 +111,7 @@ def plot_time_x(input_file, output_file1, output_file2):
 
     gp1.lname = 'Voltage vs Time'#该图片的名字为Voltage vs Time
 
-    lay_set(lay1,LayConfig())
+    po.lay_set(lay1,po.LayConfig())
 
     # 图2
     gp2 = op.new_graph()
@@ -261,7 +125,7 @@ def plot_time_x(input_file, output_file1, output_file2):
     gp2.lname = 'Current vs Time'
 
     # 设置横纵坐标字体和大小
-    lay_set(lay2,LayConfig())
+    po.lay_set(lay2,po.LayConfig())
     
     # 找到绘制的图片
     g1 = op.find_graph('graph1')
@@ -291,9 +155,9 @@ def plot_two_lines(input_file,input_file1,output_file):
     # 写：固定目录里的文件
     output_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file)  
     
-    df = read_data(input_path)
+    df = po.read_data(input_path)
     
-    df1 = read_data(input_path1)
+    df1 = po.read_data(input_path1)
 
     time_ns = df['Time(s)'] * 1e9
 
@@ -330,7 +194,7 @@ def plot_two_lines(input_file,input_file1,output_file):
     plot2.set_float('line.width', 3)  # 设置线宽为 3
     plot2.color = 'red'
 
-    lay_set(lay1,LayConfig())
+    po.lay_set(lay1,po.LayConfig())
 
     gp1.lname = 'Voltage vs Voltage1'
 
@@ -355,7 +219,7 @@ def plot_two_in_graph(input_file,output_file):
     input_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', input_file)
     output_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file) 
 
-    df = read_data(input_path)
+    df = po.read_data(input_path)
     
     time_ns = df['Time(s)'] * 1e9 #df['Time(s)']表达的是我取的Time(s)这一列的数据，这一列每一行的值都会乘以1e9
 
