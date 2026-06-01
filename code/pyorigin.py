@@ -32,7 +32,7 @@ class LayConfig:
             x_axis_label_font  = 'Times New Roman',    # X轴刻度标签字体
             y_axis_label_font  = 'Times New Roman',    # Y轴刻度标签字体
             x_axis_ticks       = 'inner',              # X轴刻度朝向
-            y_axis_ticks       = 'outer',              # Y轴刻度朝向
+            y_axis_ticks       = 'inner',              # Y轴刻度朝向
             x_from             = None,                 # X轴起始值（None表示自动计算）
             x_to               = None,                 # X轴结束值（None表示自动计算）
             y_from             = None,                 # Y轴起始值（None表示自动计算）
@@ -144,6 +144,3 @@ def project_save(name,path):
 
     path1 = os.path.join(path, name)
     op.save(path1)
-
-
-
