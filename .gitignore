@@ -1,4 +1,8 @@
 .vscode/
 __pycache__/
+
+image/
+project/
+
 data_deal.py
 raw_data.csv
