@@ -199,13 +199,13 @@ def plot_two_in_graph(input_file,output_file):
     lay1 = gp[0]
     lay2 = gp[1]
 
-    po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=1, type='l')
-    po.plot_set(wks, lay2, colx='Time(ns)', coly='Current(A)', color='black', width=1, type='l')
+    po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
+    po.plot_set(wks, lay2, colx='Time(ns)', coly='Current(A)', color='black', width=3, type='l')
 
-    lay1.rescale()
-    lay2.rescale()
+    po.lay_set(lay1,po.LayConfig())
+    po.lay_set(lay2,po.LayConfig())
 
-    op.find_graph().save_fig(output_path)
+    po.graph_save(gp,output_path)
 
     po.project_save('template4.opju', project_path)
 

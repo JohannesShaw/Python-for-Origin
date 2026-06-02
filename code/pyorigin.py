@@ -71,17 +71,38 @@ class LayConfig:
         self.y_from = y_from
         self.y_to = y_to
 
+# 内部类，用户不用关心
+class __SaveParam:
+    def __init__(self):
+        self.args = None
+        self.kwargs = None
+
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+            return func(*args, **kwargs)
+        return wrapper
+    
+    def get_template(self):
+
+        return self.kwargs.get('template', '')
+
+# 内部使用的装饰器，用于保存图像保存函数的参数，用户不用关心
+__saver = __SaveParam()
+op.new_graph = __saver(op.new_graph)
+
 # 函数功能说明：配置一个图层的参数
 # 参数说明：
 # lay: 图层对象
 # config: LayConfig类的实例，包含了图层的各种配置参数
 # 使用示例：
 # 生成两种配置,分别对应两个图层lay1和lay2,可以在LayConfig的构造函数中设置不同的参数来创建不同的配置实例,可以只改部分值,其他值就为默认值,例如：
-# lay_config1 = LayConfig(x_axis_title='Time (s)')
-# lay_config2 = LayConfig(x_axis_title='good ',y_axis_title='bad', y_axis_bold=0)
+# lay1_config = LayConfig(x_axis_title='Time (s)')
+# lay2_config = LayConfig(x_axis_title='good ',y_axis_title='bad', y_axis_bold=0)
 # 给lay1和lay2设置参数
-# po.lay_set(lay1, lay_config1)
-# po.lay_set(lay2, lay_config2)
+# po.lay_set(lay1, lay1_config)
+# po.lay_set(lay2, lay2_config)
 def lay_set(lay, config):
 
     # 设置坐标轴标题
@@ -154,7 +175,8 @@ def graph_save(
         ):
     
     graph.name = name
-    graph.set_float('autoSize',1)
+    if not __saver.get_template():
+        graph.set_float('autoSize',1)
     op.find_graph(graph.name).save_fig(path,replace=True,width=width, ratio=ratio)
 
 # 函数功能说明：读取数据，根据文件类型自动选择读取方式
