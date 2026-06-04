@@ -1,6 +1,11 @@
+# -----------------！！！！！注意！！！！！------------------------
+
+# 此文件不要修改
+# 可编辑的.py文件为plot.py main.py data_deal.py
+
+# -----------------！！！！！注意！！！！！------------------------
 import pandas as pd
 import originpro as op
-import os
 from pathlib import Path
 
 _FONT = {
@@ -116,7 +121,19 @@ class __SaveParam:
     def __call__(self, func):
         def wrapper(*args, **kwargs):
             self.args = args
-            self.kwargs = kwargs
+            self.kwargs = kwargs.copy()
+            
+            template = kwargs.get('template', '')
+
+            if template and 'otpu' in self.kwargs.get('template', ''):
+                new_template = _path_set(str(self.kwargs.get('template', '')))
+
+                #真实的
+                kwargs['template'] = new_template
+
+                #副本
+                self.kwargs['template'] = new_template
+
             return func(*args, **kwargs)
         return wrapper
     
@@ -202,16 +219,21 @@ def plot_set(
     plot.color = color
 
 # 函数功能说明：保存图像
+# 使用示例：
+# graph_save(gp,'example.png') 保存图片，名为example.png,默认保存在image文件夹
+# graph_save(gp,'example.png','D:/') 保存图片，名为example.png,保存在D盘
 def graph_save(
-        graph,          #图对象
-        name:str,           #保存的图片名字，例如'1.png'
-        path = None,    #保存路径
-        width:int = 0,  #图像宽度，单位为像素，0表示使用默认宽度
-        ratio:int = 0,  #图像宽高比，单位为百分比，0表示使用默认宽高比
+        graph,              #图对象
+        name:str,           #保存的图片名字，例如'example.png'
+        path:str = None,    #保存路径，None表示默认保存在该工作目录下的image文件夹
+        width:int = 0,      #图像宽度，单位为像素，0表示使用默认宽度
+        ratio:int = 0,      #图像宽高比，单位为百分比，0表示使用默认宽高比
         ):
     
     if not path:
-        path = __path_set(name)
+        path = _path_set(name)
+    else:
+        path = str(Path(path) / name)
 
     if not __saver.get_template():
         graph.set_float('autoSize',1)
@@ -222,14 +244,29 @@ def graph_save(
 # 参数说明：
 # name: 项目名称
 # path: 项目保存路径
-def project_save(name,path = None):
+# 使用示例：
+# project_save('example.opju') 保存项目为exmaple.opju,默认保存在project文件夹
+# project_save('example.opju','D:/') 保存项目为exmaple.opju,指定保存路径为D盘
+def project_save(
+        name,               #项目的名字
+        path:str= None      #项目保存的路径，不写的话默认保存在该工作目录下的project文件夹
+        ):
 
     if not path:
-        path = __path_set(name)
-    
+        path = _path_set(name)
+    else:
+        path = str(Path(path) / name)
+
     op.save(path)
 
 # 解析列数据，提取数值和单位，并进行转换
+# 参数说明：
+# series：表格中的某一列
+# unit_dict：单位换算字典，要对电压进行单位换算就传入_VOLTAGE_UNITS,要对电流进行单位换算就传入_CURRENT_UNITS
+# 使用示例：
+# time_clean    = po.parse_column(df[df.columns[0]], TIME_UNITS)    对表格第一列进行单位换算,换算单位字典是时间
+# voltage_clean = po.parse_column(df[df.columns[1]], VOLTAGE_UNITS) 对表格第二列进行单位换算,换算单位字典是电压
+# current_clean = po.parse_column(df[df.columns[2]], CURRENT_UNITS) 对表格第三列进行单位换算,换算单位字典是电流
 def parse_column(series, unit_dict):
     pat = r'([-+]?\d*\.?\d+(?:[eE][+-]?\d+)?)\s*([a-zA-Z]+)'
     extracted = series.str.extract(pat)
@@ -237,28 +274,40 @@ def parse_column(series, unit_dict):
     units = extracted[1].map(unit_dict)
     return values * units
 
-
 # 函数功能说明：读取数据，根据文件类型自动选择读取方式
-def read_data(file,path = None):
+# 使用示例：
+# read_data('example.csv') 读取exmaple.csv,默认读取在data文件夹中的文件
+# project_save('example.csv','D:/') 读取exmaple.csv,读取在D盘中的文件
+def read_data(
+        name,               #文件的名字
+        path:str = None     #文件的路径，不写的话默认读取该工作目录下的data文件夹
+        ):
 
     if not path:
-        path = __path_set(file)
+        path = _path_set(name)
+    else:
+        path = str(Path(path) / name)
 
-    if 'csv' in str(path):
-        df = pd.read_csv(path) 
-    elif 'txt' in str(path):
+    if 'csv' in path:
+        df = pd.read_csv(path)
+    elif 'txt' in path:
         df = pd.read_csv(path,sep='\t')
-    elif 'xlsx' in str(path):
+    elif 'xlsx' in path:
         df = pd.read_excel(path)
 
     return df
 
 
-# 函数功能说明：清洗数据
+# 函数功能说明：清洗数据,能自动识别三种数据时间，电压，电流，并对这三种数据进行清洗，
+# 同时将时间列名字改为'Time(s)',
+# 同时将电压列名字改为'Voltage(V)',
+# 同时将电流列名字改为'Current(A)'
+# 若有重复的电压，电流，时间列将会在名字后面追加_1,_2等等
+# 默认清洗data文件夹中的文件，并保存在data文件夹中
 def clean(input_file, output_file):
 
-    input_path = __path_set(input_file)
-    output_path = __path_set(output_file)
+    input_path = _path_set(input_file)
+    output_path = _path_set(output_file)
 
     df = read_data(input_path)
 
@@ -300,8 +349,8 @@ def clean(input_file, output_file):
 
     result.to_csv(output_path, index=False, float_format='%.6e')
 
-# 内部函数，用户不用关系
-def __path_set(file:str):
+# 内部函数，用户不用关心
+def _path_set(file:str):
 
     script_dir = Path(__file__).resolve().parent
 

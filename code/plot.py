@@ -1,7 +1,6 @@
 import pyorigin as po
 import originpro as op
 import pandas as pd
-import os
 
 
 def template(input_file,output_file):
@@ -162,8 +161,11 @@ def plot_two_in_graph(input_file,output_file):
     }))
 
     # 使用 Origin 内置的2面板水平模板,也可用 'PAN2VERT' 上下排列,还有'PAN4'可以放四个图
+    # gp = op.new_graph(template='PAN2VERT') 使用内置的不用加.otpu
+    # 使用自己的模板要加.otpu,路径已经写好，这里只需要写模板名字即可，如下所示
+    # gp = op.new_graph(template='example.otpu')
     gp = op.new_graph(template='PAN2VERT')
-
+    
     lay1 = gp[0]
     lay2 = gp[1]
 
