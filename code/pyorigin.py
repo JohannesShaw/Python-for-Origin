@@ -211,7 +211,7 @@ def graph_save(
         ):
     
     if not path:
-        path = path_set(name)
+        path = __path_set(name)
 
     if not __saver.get_template():
         graph.set_float('autoSize',1)
@@ -225,7 +225,7 @@ def graph_save(
 def project_save(name,path = None):
 
     if not path:
-        path = path_set(name)
+        path = __path_set(name)
     
     op.save(path)
 
@@ -242,7 +242,7 @@ def parse_column(series, unit_dict):
 def read_data(file,path = None):
 
     if not path:
-        path = path_set(file)
+        path = __path_set(file)
 
     if 'csv' in str(path):
         df = pd.read_csv(path) 
@@ -257,8 +257,8 @@ def read_data(file,path = None):
 # 函数功能说明：清洗数据
 def clean(input_file, output_file):
 
-    input_path = path_set(input_file)
-    output_path = path_set(output_file)
+    input_path = __path_set(input_file)
+    output_path = __path_set(output_file)
 
     df = read_data(input_path)
 
@@ -300,7 +300,8 @@ def clean(input_file, output_file):
 
     result.to_csv(output_path, index=False, float_format='%.6e')
 
-def path_set(file:str):
+# 内部函数，用户不用关系
+def __path_set(file:str):
 
     script_dir = Path(__file__).resolve().parent
 
