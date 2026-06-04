@@ -1,9 +1,7 @@
 .vscode/
 __pycache__/
 
-image/
-project/
-data/
+image/*.png
+project/*.opju
 
-raw_data.csv
 my_data_deal.py
