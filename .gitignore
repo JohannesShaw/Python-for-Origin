@@ -3,6 +3,7 @@ __pycache__/
 
 image/
 project/
+data/
 
-data_deal.py
 raw_data.csv
+my_data_deal.py

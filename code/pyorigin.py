@@ -26,8 +26,8 @@ class LayConfig:
             legend_font_size   = 26,                   # 图例字体大小
             x_axis_thickness   = 3,                    # X轴线条粗细
             y_axis_thickness   = 3,                    # Y轴线条粗细
-            x_axis_bold        = 1,                    # X轴标题是否加粗（1=加粗，0=不加粗）
-            y_axis_bold        = 1,                    # Y轴标题是否加粗（1=加粗，0=不加粗）
+            x_axis_bold        = 1,                    # X轴数字是否加粗（1=加粗，0=不加粗）
+            y_axis_bold        = 1,                    # Y轴数字是否加粗（1=加粗，0=不加粗）
             x_axis_label_pt    = 26,                   # X轴刻度标签字体大小
             y_axis_label_pt    = 26,                   # Y轴刻度标签字体大小
             x_axis_label_font  = 'Times New Roman',    # X轴刻度标签字体
@@ -179,17 +179,6 @@ def graph_save(
         graph.set_float('autoSize',1)
     op.find_graph(graph.name).save_fig(path,replace=True,width=width, ratio=ratio)
 
-# 函数功能说明：读取数据，根据文件类型自动选择读取方式
-def read_data(input_file):
-
-    if 'csv' in input_file:#判断是不是csv文件
-        df = pd.read_csv(input_file)
-    elif 'txt' in input_file:#判断是不是txt文件
-        df = pd.read_csv(input_file,sep='\t')
-    elif 'xlsx' in input_file:#判断是不是xlsx文件
-        df = pd.read_excel(input_file)
-
-    return df
  
 # 函数功能说明：保存项目
 # 参数说明：
