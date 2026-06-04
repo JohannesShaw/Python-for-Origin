@@ -188,3 +188,24 @@ def project_save(name,path):
 
     path1 = os.path.join(path, name)
     op.save(path1)
+
+# 解析列数据，提取数值和单位，并进行转换
+def parse_column(series, unit_dict):
+    pat = r'([-+]?\d*\.?\d+(?:[eE][+-]?\d+)?)\s*([a-zA-Z]+)'
+    extracted = series.str.extract(pat)
+    values = pd.to_numeric(extracted[0], errors='coerce')
+    units = extracted[1].map(unit_dict)
+    return values * units
+
+
+# 函数功能说明：读取数据，根据文件类型自动选择读取方式
+def read_data(input_path):
+
+    if 'csv' in input_path:
+        df = pd.read_csv(input_path) 
+    elif 'txt' in input_path:
+        df = pd.read_csv(input_path,sep='\t')
+    elif 'xlsx' in input_path:
+        df = pd.read_excel(input_path)
+
+    return df
