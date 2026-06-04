@@ -37,7 +37,8 @@ def clean(input_file, output_file):
     output_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', output_file) # 存：固定目录里的文件
 
     df = po.read_data(input_path)
-        
+    
+    # 重命名列
     rename_mapping = {
 
         df.columns[0]: 'Time(s)',
@@ -48,6 +49,7 @@ def clean(input_file, output_file):
 
     df.rename(columns=rename_mapping, inplace=True)
 
+    # 清洗列
     time_clean    = po.parse_column(df[df.columns[0]], TIME_UNITS)
     voltage_clean = po.parse_column(df[df.columns[1]], VOLTAGE_UNITS)
     current_clean = po.parse_column(df[df.columns[2]], CURRENT_UNITS)

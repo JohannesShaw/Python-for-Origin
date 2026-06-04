@@ -1,14 +1,50 @@
 import pandas as pd
 import originpro as op
 import os
+from pathlib import Path
 
-FONT = {
+__FONT = {
     'Times New Roman': 345,
     'Arial': 69,
     '宋体': 1,
     '微软雅黑': 55,
     'inner': 5,
     'outer': 10
+}
+
+__RENAME_MAP = {
+    'sec': 'Time(s)',
+    'A': 'Current(A)',
+    'V': 'Voltage(V)',
+    'TLP': 'TLP(V)'
+}
+
+# 时间单位转换
+__TIME_UNITS = {
+    'sec': 1.0,
+    'psec': 1e-12,
+    'nsec': 1e-9,
+    'fsec': 1e-15,
+}
+
+# 电流单位转换
+__CURRENT_UNITS = {
+    'A': 1.0,
+    'mA': 1e-3,
+    'uA': 1e-6,
+    'nA': 1e-9,
+    'pA': 1e-12,
+    'fA': 1e-15,
+}
+
+# 电压单位转换
+__VOLTAGE_UNITS = {
+    'V': 1.0,
+    'mV': 1e-3,
+    'uV': 1e-6,
+    'nV': 1e-9,
+    'pV': 1e-12,
+    'fV': 1e-15,
 }
 
 # 定义一个类来存储图层配置参数
@@ -43,9 +79,9 @@ class LayConfig:
         self.x_axis_title = x_axis_title
         self.y_axis_title = y_axis_title
 
-        self.x_axis_font = FONT[x_axis_font]
-        self.y_axis_font = FONT[y_axis_font]
-        self.legend_font = FONT[legend_font]
+        self.x_axis_font = __FONT[x_axis_font]
+        self.y_axis_font = __FONT[y_axis_font]
+        self.legend_font = __FONT[legend_font]
 
         self.x_axis_font_size = x_axis_font_size
         self.y_axis_font_size = y_axis_font_size
@@ -60,11 +96,11 @@ class LayConfig:
         self.x_axis_label_pt = x_axis_label_pt
         self.y_axis_label_pt = y_axis_label_pt
 
-        self.x_axis_label_font = FONT[x_axis_label_font]
-        self.y_axis_label_font = FONT[y_axis_label_font]
+        self.x_axis_label_font = __FONT[x_axis_label_font]
+        self.y_axis_label_font = __FONT[y_axis_label_font]
 
-        self.x_axis_ticks = FONT[x_axis_ticks]
-        self.y_axis_ticks = FONT[y_axis_ticks]
+        self.x_axis_ticks = __FONT[x_axis_ticks]
+        self.y_axis_ticks = __FONT[y_axis_ticks]
 
         self.x_from = x_from
         self.x_to = x_to
@@ -201,11 +237,62 @@ def parse_column(series, unit_dict):
 # 函数功能说明：读取数据，根据文件类型自动选择读取方式
 def read_data(input_path):
 
-    if 'csv' in input_path:
+    if 'csv' in str(input_path):
         df = pd.read_csv(input_path) 
-    elif 'txt' in input_path:
+    elif 'txt' in str(input_path):
         df = pd.read_csv(input_path,sep='\t')
-    elif 'xlsx' in input_path:
+    elif 'xlsx' in str(input_path):
         df = pd.read_excel(input_path)
 
     return df
+
+
+# 函数功能说明：清洗数据
+def clean(input_file, output_file):
+
+    script_dir = Path(__file__).resolve().parent
+
+    data_dir = script_dir.parent / "data"
+
+    input_path = data_dir / input_file
+    output_path = script_dir.parent / "data" / output_file
+
+    df = read_data(input_path)
+
+    row = df.iloc[0]
+
+    # 关键字匹配顺序：先长后短，避免 TLP 被 V 错误捕获
+    patterns = [
+        ('TLP', __RENAME_MAP['TLP'], __VOLTAGE_UNITS),
+        ('sec', __RENAME_MAP['sec'], __TIME_UNITS),
+        ('A',   __RENAME_MAP['A'],   __CURRENT_UNITS),
+        ('V',   __RENAME_MAP['V'],   __VOLTAGE_UNITS),
+    ]
+
+    parsed_series = []
+    name_counts = {}          # 记录每个 new_name 出现的次数，用于处理重名
+
+    for col in df.columns:
+        cell = str(row[col])
+        for keyword, new_name, unit_dict in patterns:
+            if keyword in cell:
+                series_clean = parse_column(df[col], unit_dict)
+                
+                # 处理列名重复：第一个保留原名，后续加 _1, _2 ...
+                if new_name in name_counts:
+                    name_counts[new_name] += 1
+                    unique_name = f"{new_name}_{name_counts[new_name]}"
+                else:
+                    name_counts[new_name] = 0
+                    unique_name = new_name
+                    
+                parsed_series.append((unique_name, series_clean))
+                break
+
+    # 只输出识别到的列
+    if parsed_series:
+        result = pd.DataFrame({name: series for name, series in parsed_series})
+    else:
+        result = pd.DataFrame()
+
+    result.to_csv(output_path, index=False, float_format='%.6e')
