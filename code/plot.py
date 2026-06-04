@@ -6,17 +6,8 @@ import os
 
 def template(input_file,output_file):
 
-    # 设置读取文件的路径
-    input_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', input_file)
-
-    # 设置输出图片的路径
-    output_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file)
-
-    # 设置保存origin工程文件的路径
-    project_path = r'D:\VsCode File\Python Code\data_analysis\project'
-
     # 读取数据
-    df = po.read_data(input_path)
+    df = po.read_data(input_file)
 
     # 打开origin软件
     op.set_show(True)  
@@ -51,9 +42,9 @@ def template(input_file,output_file):
 
     po.lay_set(lay1,po.LayConfig())
     
-    po.graph_save(gp1,output_path)
+    po.graph_save(gp1,output_file)
   
-    po.project_save('template1.opju', project_path)
+    po.project_save('template1.opju')
 
 #------------------------参数设置------------------------
     # 关闭 Origin 应用程序
@@ -64,16 +55,8 @@ def template(input_file,output_file):
 #绘制两个图的示例
 def plot_time_x(input_file, output_file1, output_file2):
 
-    
-    input_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', input_file)   
 
-    output_path1 = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file1)  
-    output_path2 = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file2)
-
-    project_path = r'D:\VsCode File\Python Code\data_analysis\project'
-
-
-    df = po.read_data(input_path)
+    df = po.read_data(input_file)
     
     time_ns = df['Time(s)'] * 1e9 
 
@@ -106,10 +89,10 @@ def plot_time_x(input_file, output_file1, output_file2):
 
     po.lay_set(lay2,po.LayConfig())
     
-    po.graph_save(gp1,output_path1)
-    po.graph_save(gp2,output_path2)
+    po.graph_save(gp1,output_file1)
+    po.graph_save(gp2,output_file2)
 
-    po.project_save('template2.opju', project_path)
+    po.project_save('template2.opju')
 
     #op.exit()  
 
@@ -118,19 +101,9 @@ def plot_time_x(input_file, output_file1, output_file2):
 #在一个图绘制两条线的示例
 def plot_two_lines(input_file,input_file1,output_file):
 
-
-    input_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', input_file)   
-
-
-    input_path1 = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', input_file1)  
-
-    output_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file)  
+    df = po.read_data(input_file)
     
-    project_path = r'D:\VsCode File\Python Code\data_analysis\project'
-
-    df = po.read_data(input_path)
-    
-    df1 = po.read_data(input_path1)
+    df1 = po.read_data(input_file1)
 
     #展示绘图过程
     op.set_show(True)
@@ -158,9 +131,9 @@ def plot_two_lines(input_file,input_file1,output_file):
 
     po.lay_set(lay1,po.LayConfig())
 
-    po.graph_save(gp1,output_path)
+    po.graph_save(gp1,output_file)
 
-    po.project_save('template3.opju', project_path)
+    po.project_save('template3.opju')
 
     # 关闭 Origin 应用程序
     #op.exit()  
@@ -170,12 +143,7 @@ def plot_two_lines(input_file,input_file1,output_file):
 #在一个图中绘制多个图层，重点就是改变gp = op.new_graph(template='PAN2HORZ')使用的模板
 def plot_two_in_graph(input_file,output_file):
 
-    input_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', input_file)
-    output_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\image', output_file) 
-
-    project_path = r'D:\VsCode File\Python Code\data_analysis\project'
-
-    df = po.read_data(input_path)
+    df = po.read_data(input_file)
     
     op.set_show(True)  
 
@@ -205,9 +173,9 @@ def plot_two_in_graph(input_file,output_file):
     po.lay_set(lay1,po.LayConfig())
     po.lay_set(lay2,po.LayConfig())
 
-    po.graph_save(gp,output_path)
+    po.graph_save(gp,output_file)
 
-    po.project_save('template4.opju', project_path)
+    po.project_save('template4.opju')
 
     # 关闭 Origin 应用程序
     #op.exit()  

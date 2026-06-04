@@ -3,7 +3,7 @@ import originpro as op
 import os
 from pathlib import Path
 
-__FONT = {
+_FONT = {
     'Times New Roman': 345,
     'Arial': 69,
     '宋体': 1,
@@ -12,7 +12,7 @@ __FONT = {
     'outer': 10
 }
 
-__RENAME_MAP = {
+_RENAME_MAP = {
     'sec': 'Time(s)',
     'A': 'Current(A)',
     'V': 'Voltage(V)',
@@ -20,7 +20,7 @@ __RENAME_MAP = {
 }
 
 # 时间单位转换
-__TIME_UNITS = {
+_TIME_UNITS = {
     'sec': 1.0,
     'psec': 1e-12,
     'nsec': 1e-9,
@@ -28,7 +28,7 @@ __TIME_UNITS = {
 }
 
 # 电流单位转换
-__CURRENT_UNITS = {
+_CURRENT_UNITS = {
     'A': 1.0,
     'mA': 1e-3,
     'uA': 1e-6,
@@ -38,7 +38,7 @@ __CURRENT_UNITS = {
 }
 
 # 电压单位转换
-__VOLTAGE_UNITS = {
+_VOLTAGE_UNITS = {
     'V': 1.0,
     'mV': 1e-3,
     'uV': 1e-6,
@@ -79,9 +79,9 @@ class LayConfig:
         self.x_axis_title = x_axis_title
         self.y_axis_title = y_axis_title
 
-        self.x_axis_font = __FONT[x_axis_font]
-        self.y_axis_font = __FONT[y_axis_font]
-        self.legend_font = __FONT[legend_font]
+        self.x_axis_font = _FONT[x_axis_font]
+        self.y_axis_font = _FONT[y_axis_font]
+        self.legend_font = _FONT[legend_font]
 
         self.x_axis_font_size = x_axis_font_size
         self.y_axis_font_size = y_axis_font_size
@@ -96,11 +96,11 @@ class LayConfig:
         self.x_axis_label_pt = x_axis_label_pt
         self.y_axis_label_pt = y_axis_label_pt
 
-        self.x_axis_label_font = __FONT[x_axis_label_font]
-        self.y_axis_label_font = __FONT[y_axis_label_font]
+        self.x_axis_label_font = _FONT[x_axis_label_font]
+        self.y_axis_label_font = _FONT[y_axis_label_font]
 
-        self.x_axis_ticks = __FONT[x_axis_ticks]
-        self.y_axis_ticks = __FONT[y_axis_ticks]
+        self.x_axis_ticks = _FONT[x_axis_ticks]
+        self.y_axis_ticks = _FONT[y_axis_ticks]
 
         self.x_from = x_from
         self.x_to = x_to
@@ -203,14 +203,16 @@ def plot_set(
 
 # 函数功能说明：保存图像
 def graph_save(
-        graph,              #图对象
-        path,               #保存路径
-        width:int = 0,      #图像宽度，单位为像素，0表示使用默认宽度
-        ratio:int = 0,      #图像宽高比，单位为百分比，0表示使用默认宽高比
-        name='graph'        #图像名称
+        graph,          #图对象
+        name:str,           #保存的图片名字，例如'1.png'
+        path = None,    #保存路径
+        width:int = 0,  #图像宽度，单位为像素，0表示使用默认宽度
+        ratio:int = 0,  #图像宽高比，单位为百分比，0表示使用默认宽高比
         ):
     
-    graph.name = name
+    if not path:
+        path = path_set(name)
+
     if not __saver.get_template():
         graph.set_float('autoSize',1)
     op.find_graph(graph.name).save_fig(path,replace=True,width=width, ratio=ratio)
@@ -220,10 +222,12 @@ def graph_save(
 # 参数说明：
 # name: 项目名称
 # path: 项目保存路径
-def project_save(name,path):
+def project_save(name,path = None):
 
-    path1 = os.path.join(path, name)
-    op.save(path1)
+    if not path:
+        path = path_set(name)
+    
+    op.save(path)
 
 # 解析列数据，提取数值和单位，并进行转换
 def parse_column(series, unit_dict):
@@ -235,14 +239,17 @@ def parse_column(series, unit_dict):
 
 
 # 函数功能说明：读取数据，根据文件类型自动选择读取方式
-def read_data(input_path):
+def read_data(file,path = None):
 
-    if 'csv' in str(input_path):
-        df = pd.read_csv(input_path) 
-    elif 'txt' in str(input_path):
-        df = pd.read_csv(input_path,sep='\t')
-    elif 'xlsx' in str(input_path):
-        df = pd.read_excel(input_path)
+    if not path:
+        path = path_set(file)
+
+    if 'csv' in str(path):
+        df = pd.read_csv(path) 
+    elif 'txt' in str(path):
+        df = pd.read_csv(path,sep='\t')
+    elif 'xlsx' in str(path):
+        df = pd.read_excel(path)
 
     return df
 
@@ -250,12 +257,8 @@ def read_data(input_path):
 # 函数功能说明：清洗数据
 def clean(input_file, output_file):
 
-    script_dir = Path(__file__).resolve().parent
-
-    data_dir = script_dir.parent / "data"
-
-    input_path = data_dir / input_file
-    output_path = script_dir.parent / "data" / output_file
+    input_path = path_set(input_file)
+    output_path = path_set(output_file)
 
     df = read_data(input_path)
 
@@ -263,10 +266,10 @@ def clean(input_file, output_file):
 
     # 关键字匹配顺序：先长后短，避免 TLP 被 V 错误捕获
     patterns = [
-        ('TLP', __RENAME_MAP['TLP'], __VOLTAGE_UNITS),
-        ('sec', __RENAME_MAP['sec'], __TIME_UNITS),
-        ('A',   __RENAME_MAP['A'],   __CURRENT_UNITS),
-        ('V',   __RENAME_MAP['V'],   __VOLTAGE_UNITS),
+        ('TLP', _RENAME_MAP['TLP'], _VOLTAGE_UNITS),
+        ('sec', _RENAME_MAP['sec'], _TIME_UNITS),
+        ('A',   _RENAME_MAP['A'],   _CURRENT_UNITS),
+        ('V',   _RENAME_MAP['V'],   _VOLTAGE_UNITS),
     ]
 
     parsed_series = []
@@ -296,3 +299,24 @@ def clean(input_file, output_file):
         result = pd.DataFrame()
 
     result.to_csv(output_path, index=False, float_format='%.6e')
+
+def path_set(file:str):
+
+    script_dir = Path(__file__).resolve().parent
+
+    data_dir     = script_dir.parent / "data"
+    image_dir    = script_dir.parent / "image"
+    template_dir = script_dir.parent / "my_template"
+    project_dir  = script_dir.parent / "project"
+
+    if file.endswith(('.txt', '.csv', '.xlsx')):
+        file_path = data_dir / file
+    elif file.endswith('.png'):
+        file_path = image_dir / file
+    elif file.endswith('.otpu'):
+        file_path = template_dir / file
+    elif file.endswith('.opju'):
+        file_path = project_dir / file
+
+    return str(file_path)
+
