@@ -112,7 +112,7 @@ class LayConfig:
         self.y_from = y_from
         self.y_to = y_to
 
-# 内部类，用户不用关心
+# 内部类，用户不用关心，以及调用与使用
 class __SaveParam:
     def __init__(self):
         self.args = None
@@ -156,7 +156,7 @@ op.new_graph = __saver(op.new_graph)
 # 给lay1和lay2设置参数
 # po.lay_set(lay1, lay1_config)
 # po.lay_set(lay2, lay2_config)
-def lay_set(lay, config):
+def lay_set(lay:op.GLayer, config:LayConfig):
 
     # 设置坐标轴标题
     lay.axis('x').title = config.x_axis_title
@@ -205,25 +205,25 @@ def lay_set(lay, config):
 
 # 函数功能说明：在一个图层中绘制一条线
 def plot_set(
-        data,               #worksheet数据源
-        lay,                #图层对象
-        colx,               #worksheet中作为x轴数据的列名
-        coly,               #worksheet中作为y轴数据的列名
-        color='black',      #线条颜色
-        width:float = 3,    #线条宽度
-        type='l'            #图表类型，'l'(Line Plot) 's'(Scatter Plot) 'y' (Line Symbols) 'c' (Column) '?' auto(template)
+        data:op.MSheet | op.WSheet,     #worksheet数据源
+        lay:op.GLayer,                  #图层对象
+        colx,                           #worksheet中作为x轴数据的列名
+        coly,                           #worksheet中作为y轴数据的列名
+        color:str='black',              #线条颜色
+        width:float = 3,                #线条宽度
+        type='l'                        #图表类型，'l'(Line Plot) 's'(Scatter Plot) 'y' (Line Symbols) 'c' (Column) '?' auto(template)
         ):
 
     plot = lay.add_plot(data, colx=colx, coly=coly, type=type)
     plot.set_float('line.width', width)  # 设置线宽
     plot.color = color
 
-# 函数功能说明：保存图像
+# 函数功能说明：保存图像,目前支持.png格式
 # 使用示例：
 # graph_save(gp,'example.png') 保存图片，名为example.png,默认保存在image文件夹
 # graph_save(gp,'example.png','D:/') 保存图片，名为example.png,保存在D盘
 def graph_save(
-        graph,              #图对象
+        graph:op.GPage,     #图对象
         name:str,           #保存的图片名字，例如'example.png'
         path:str = None,    #保存路径，None表示默认保存在该工作目录下的image文件夹
         width:int = 0,      #图像宽度，单位为像素，0表示使用默认宽度
@@ -237,7 +237,12 @@ def graph_save(
 
     if not __saver.get_template():
         graph.set_float('autoSize',1)
-    op.find_graph(graph.name).save_fig(path,replace=True,width=width, ratio=ratio)
+
+    if name.endswith('.png'):
+        op.find_graph(graph.name).save_fig(path,replace=True,width=width, ratio=ratio)
+        print(f"图片文件保存成功,保存在{path}")
+    else:
+        print("不支持该图片文件格式保存")
 
  
 # 函数功能说明：保存项目
@@ -248,7 +253,7 @@ def graph_save(
 # project_save('example.opju') 保存项目为exmaple.opju,默认保存在project文件夹
 # project_save('example.opju','D:/') 保存项目为exmaple.opju,指定保存路径为D盘
 def project_save(
-        name,               #项目的名字
+        name:str,           #项目的名字
         path:str= None      #项目保存的路径，不写的话默认保存在该工作目录下的project文件夹
         ):
 
@@ -257,8 +262,11 @@ def project_save(
     else:
         path = str(Path(path) / name)
 
-    op.save(path)
-
+    if name.endswith('.opju'):
+        op.save(path)
+        print(f"工程文件保存成功,保存在{path}")
+    else:
+        print("不支持该工程文件格式保存")
 # 解析列数据，提取数值和单位，并进行转换
 # 参数说明：
 # series：表格中的某一列
@@ -274,12 +282,12 @@ def parse_column(series, unit_dict):
     units = extracted[1].map(unit_dict)
     return values * units
 
-# 函数功能说明：读取数据，根据文件类型自动选择读取方式
+# 函数功能说明：读取数据，根据文件类型自动选择读取方式,目前支持 .csv, .txt, .xlsx格式
 # 使用示例：
 # read_data('example.csv') 读取exmaple.csv,默认读取在data文件夹中的文件
 # project_save('example.csv','D:/') 读取exmaple.csv,读取在D盘中的文件
 def read_data(
-        name,               #文件的名字
+        name:str,           #文件的名字
         path:str = None     #文件的路径，不写的话默认读取该工作目录下的data文件夹
         ):
 
@@ -288,11 +296,11 @@ def read_data(
     else:
         path = str(Path(path) / name)
 
-    if 'csv' in path:
+    if path.endswith('.csv'):
         df = pd.read_csv(path)
-    elif 'txt' in path:
+    elif path.endswith('.txt'):
         df = pd.read_csv(path,sep='\t')
-    elif 'xlsx' in path:
+    elif path.endswith('.xlsx'):
         df = pd.read_excel(path)
 
     return df
@@ -304,12 +312,9 @@ def read_data(
 # 同时将电流列名字改为'Current(A)'
 # 若有重复的电压，电流，时间列将会在名字后面追加_1,_2等等
 # 默认清洗data文件夹中的文件，并保存在data文件夹中
-def clean(input_file, output_file):
+def clean(input_file:str, output_file:str):
 
-    input_path = _path_set(input_file)
-    output_path = _path_set(output_file)
-
-    df = read_data(input_path)
+    df = read_data(input_file)
 
     row = df.iloc[0]
 
@@ -347,9 +352,36 @@ def clean(input_file, output_file):
     else:
         result = pd.DataFrame()
 
-    result.to_csv(output_path, index=False, float_format='%.6e')
+    print("数据清洗完成")
+    
+    file_save(result,output_file)
+    
+# 函数功能说明：保存文件，目前仅支持csv格式文件保存，其他类型数据保存将会提示报错
+# 参数说明：
+# dataframe: 要保存的数据
+# name: 文件夹起名字
+# path: 文件夹保存的路径,None表示默认,默认保存的路径为该工作目录
+# index: 保存的数据是否需要标号,需要Ture,不需要Flase
+# float_format：保存数据的格式,默认是保留小数点后六位，且采用科学计数法
+def file_save(
+        dataframe:pd.DataFrame,     
+        name:str,
+        path:str = None,
+        index:bool = False,
+        float_format = '%.6e'
+        ):
+    if not path:
+        path = _path_set(name)
+    else:
+        path = str(Path(path) / name)
 
-# 内部函数，用户不用关心
+    if  name.endswith(('.csv','.txt')):
+        dataframe.to_csv(path, index = index, float_format = float_format)
+        print(f"文件保存成功,保存在{path}")
+    else:
+        print("不支持该文件格式保存")
+
+# 内部函数，用户不用关心，以及调用与使用
 def _path_set(file:str):
 
     script_dir = Path(__file__).resolve().parent
@@ -367,6 +399,7 @@ def _path_set(file:str):
         file_path = template_dir / file
     elif file.endswith('.opju'):
         file_path = project_dir / file
-
+    else:
+        file_path = None
     return str(file_path)
 

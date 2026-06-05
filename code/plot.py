@@ -37,19 +37,26 @@ def template(input_file,output_file):
     lay1 = gp1[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
 
 #------------------------参数设置------------------------
+
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
 
     po.lay_set(lay1,po.LayConfig())
     
+#------------------------参数设置------------------------
+
+    print("绘图完成")
+
+#------------------------保存设置------------------------
+
     po.graph_save(gp1,output_file)
   
     po.project_save('template1.opju')
 
-#------------------------参数设置------------------------
+#------------------------保存设置------------------------
+
     # 关闭 Origin 应用程序
     #op.exit()                           
     
-    print("绘图完成")
 
 #绘制两个图的示例
 def plot_time_x(input_file, output_file1, output_file2):
@@ -75,7 +82,8 @@ def plot_time_x(input_file, output_file1, output_file2):
 
     gp1 = op.new_graph()
     lay1 = gp1[0]
-    
+#------------------------参数设置------------------------
+
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
 
     po.lay_set(lay1,po.LayConfig())
@@ -87,15 +95,20 @@ def plot_time_x(input_file, output_file1, output_file2):
     po.plot_set(wks, lay2, colx='Time(ns)', coly='Current(A)', color='black', width=3, type='l')
 
     po.lay_set(lay2,po.LayConfig())
-    
+
+#------------------------参数设置------------------------
+
+    print("绘图完成")
+
+#------------------------保存设置------------------------
+
     po.graph_save(gp1,output_file1)
     po.graph_save(gp2,output_file2)
 
     po.project_save('template2.opju')
 
-    #op.exit()  
+#------------------------保存设置------------------------
 
-    print("绘图完成")
     
 #在一个图绘制两条线的示例
 def plot_two_lines(input_file,input_file1,output_file):
@@ -124,20 +137,28 @@ def plot_two_lines(input_file,input_file1,output_file):
     gp1 = op.new_graph()
     lay1 = gp1[0]
 
+#------------------------参数设置------------------------
+
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
 
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)1', color='red', width=3, type='l')
 
     po.lay_set(lay1,po.LayConfig())
 
+#------------------------参数设置------------------------
+
+    print("绘图完成")
+
+#------------------------保存设置------------------------
+
     po.graph_save(gp1,output_file)
 
     po.project_save('template3.opju')
 
+#------------------------保存设置------------------------
     # 关闭 Origin 应用程序
     #op.exit()  
     
-    print("绘图完成")
     
 #在一个图中绘制多个图层，重点就是改变gp = op.new_graph(template='PAN2HORZ')使用的模板
 def plot_two_in_graph(input_file,output_file):
@@ -161,13 +182,15 @@ def plot_two_in_graph(input_file,output_file):
     }))
 
     # 使用 Origin 内置的2面板水平模板,也可用 'PAN2VERT' 上下排列,还有'PAN4'可以放四个图
-    # gp = op.new_graph(template='PAN2VERT') 使用内置的不用加.otpu
-    # 使用自己的模板要加.otpu,路径已经写好，这里只需要写模板名字即可，如下所示
+    # gp = op.new_graph(template='PAN2VERT') 使用内置的不用加 .otpu 
+    # 使用自己的模板要加 .otpu ,路径已经写好,这里只需要写模板名字即可，如下所示
     # gp = op.new_graph(template='example.otpu')
     gp = op.new_graph(template='PAN2VERT')
     
     lay1 = gp[0]
     lay2 = gp[1]
+
+#------------------------参数设置------------------------
 
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
     po.plot_set(wks, lay2, colx='Time(ns)', coly='Current(A)', color='black', width=3, type='l')
@@ -175,11 +198,17 @@ def plot_two_in_graph(input_file,output_file):
     po.lay_set(lay1,po.LayConfig())
     po.lay_set(lay2,po.LayConfig())
 
+#------------------------参数设置------------------------
+
+    print("绘图完成")
+    
+#------------------------保存设置------------------------
+
     po.graph_save(gp,output_file)
 
     po.project_save('template4.opju')
+#------------------------保存设置------------------------
 
     # 关闭 Origin 应用程序
     #op.exit()  
     
-    print("绘图完成")

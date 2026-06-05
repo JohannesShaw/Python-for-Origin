@@ -33,10 +33,7 @@ VOLTAGE_UNITS = {
 
 def clean(input_file, output_file):
 
-    input_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', input_file)   # 读：固定目录里的文件
-    output_path = os.path.join(r'D:\VsCode File\Python Code\data_analysis\data', output_file) # 存：固定目录里的文件
-
-    df = po.read_data(input_path)
+    df = po.read_data(input_file)
     
     # 重命名列
     rename_mapping = {
@@ -63,4 +60,8 @@ def clean(input_file, output_file):
 
     })
 
-    result.to_csv(output_path, index=False, float_format='%.6e')
+    print("数据清洗完成")
+    
+    po.file_save(result,output_file)
+
+    
