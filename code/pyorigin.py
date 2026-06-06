@@ -57,22 +57,24 @@ class LayConfig:
 
     def __init__(
             self,
-            x_axis_title       = 'x',                  # X轴标题文字
-            y_axis_title       = 'y',                  # Y轴标题文字
-            x_axis_font        = 'Times New Roman',    # X轴标题字体
-            y_axis_font        = 'Times New Roman',    # Y轴标题字体
+            x_title            = 'x',                  # X轴标题文字
+            y_title            = 'y',                  # Y轴标题文字
+            x_font             = 'Times New Roman',    # X轴标题字体
+            y_font             = 'Times New Roman',    # Y轴标题字体
+            x_bold             = 1,                    # X轴标题字体是否加粗（1=加粗，0=不加粗）
+            y_bold             = 1,                    # Y轴标题字体是否加粗（1=加粗，0=不加粗）
             legend_font        = 'Times New Roman',    # 图例字体
-            x_axis_font_size   = 36,                   # X轴标题字体大小
-            y_axis_font_size   = 36,                   # Y轴标题字体大小
+            x_font_size        = 36,                   # X轴标题字体大小
+            y_font_size        = 36,                   # Y轴标题字体大小
             legend_font_size   = 26,                   # 图例字体大小
             x_axis_thickness   = 3,                    # X轴线条粗细
             y_axis_thickness   = 3,                    # Y轴线条粗细
             x_axis_bold        = 1,                    # X轴数字是否加粗（1=加粗，0=不加粗）
             y_axis_bold        = 1,                    # Y轴数字是否加粗（1=加粗，0=不加粗）
-            x_axis_label_pt    = 26,                   # X轴刻度标签字体大小
-            y_axis_label_pt    = 26,                   # Y轴刻度标签字体大小
-            x_axis_label_font  = 'Times New Roman',    # X轴刻度标签字体
-            y_axis_label_font  = 'Times New Roman',    # Y轴刻度标签字体
+            x_axis_pt          = 26,                   # X轴数字大小
+            y_axis_pt          = 26,                   # Y轴数字大小
+            x_axis_font        = 'Times New Roman',    # X轴数字字体
+            y_axis_font        = 'Times New Roman',    # Y轴数字字体
             x_axis_ticks       = 'inner',              # X轴刻度朝向
             y_axis_ticks       = 'inner',              # Y轴刻度朝向
             x_from             = None,                 # X轴起始值（None表示自动计算）
@@ -80,18 +82,21 @@ class LayConfig:
             x_step             = None,                 # X轴step（None表示自动计算）
             y_from             = None,                 # Y轴起始值（None表示自动计算）
             y_to               = None,                 # Y轴结束值（None表示自动计算）
-            y_step             = None,                 # Y轴step（None表示自动计算）
+            y_step             = None                  # y轴step（None表示自动计算）
                 ):
         
-        self.x_axis_title = x_axis_title
-        self.y_axis_title = y_axis_title
+        self.x_title = x_title
+        self.y_title = y_title
 
-        self.x_axis_font = _FONT[x_axis_font]
-        self.y_axis_font = _FONT[y_axis_font]
+        self.x_font = _FONT[x_font]
+        self.y_font = _FONT[y_font]
         self.legend_font = _FONT[legend_font]
 
-        self.x_axis_font_size = x_axis_font_size
-        self.y_axis_font_size = y_axis_font_size
+        self.x_bold = x_bold
+        self.y_bold = y_bold
+
+        self.x_font_size = x_font_size
+        self.y_font_size = y_font_size
         self.legend_font_size = legend_font_size
 
         self.x_axis_thickness = x_axis_thickness
@@ -100,11 +105,11 @@ class LayConfig:
         self.x_axis_bold = x_axis_bold
         self.y_axis_bold = y_axis_bold
 
-        self.x_axis_label_pt = x_axis_label_pt
-        self.y_axis_label_pt = y_axis_label_pt
+        self.x_axis_pt = x_axis_pt
+        self.y_axis_pt = y_axis_pt
 
-        self.x_axis_label_font = _FONT[x_axis_label_font]
-        self.y_axis_label_font = _FONT[y_axis_label_font]
+        self.x_axis_font = _FONT[x_axis_font]
+        self.y_axis_font = _FONT[y_axis_font]
 
         self.x_axis_ticks = _FONT[x_axis_ticks]
         self.y_axis_ticks = _FONT[y_axis_ticks]
@@ -161,18 +166,18 @@ op.new_graph = __saver(op.new_graph)
 # 给lay1和lay2设置参数
 # po.lay_set(lay1, lay1_config)
 # po.lay_set(lay2, lay2_config)
-def lay_set(lay:op.GLayer, config:LayConfig):
+def lay_set(Graph:op.GPage,lay:op.GLayer, config:LayConfig):
 
     # 设置坐标轴标题
-    lay.axis('x').title = config.x_axis_title
-    lay.axis('y').title = config.y_axis_title
+    lay.axis('x').title = config.x_title
+    lay.axis('y').title = config.y_title
 
     # 字体 & 大小
-    lay.label('xb').set_int('font', config.x_axis_font)
-    lay.label('xb').set_int('fsize', config.x_axis_font_size)
+    lay.label('xb').set_int('font', config.x_font)
+    lay.label('xb').set_int('fsize', config.x_font_size)
     
-    lay.label('yl').set_int('font', config.y_axis_font)
-    lay.label('yl').set_int('fsize', config.y_axis_font_size)
+    lay.label('yl').set_int('font', config.y_font)
+    lay.label('yl').set_int('fsize', config.y_font_size)
 
     lay.label('legend').set_int('font', config.legend_font)
     lay.label('legend').set_int('fsize', config.legend_font_size)
@@ -186,10 +191,10 @@ def lay_set(lay:op.GLayer, config:LayConfig):
     lay.set_float('y.label.bold', config.y_axis_bold )
 
     # 刻度数字大小 & 字体
-    lay.set_float('x.label.pt', config.x_axis_label_pt)
-    lay.set_float('y.label.pt', config.y_axis_label_pt)
-    lay.set_float('x.label.font', config.x_axis_label_font)
-    lay.set_float('y.label.font', config.y_axis_label_font)
+    lay.set_float('x.label.pt', config.x_axis_pt)
+    lay.set_float('y.label.pt', config.y_axis_pt)
+    lay.set_float('x.label.font', config.x_axis_font)
+    lay.set_float('y.label.font', config.y_axis_font)
 
     # 刻度朝向
     lay.set_float('x.ticks', config.x_axis_ticks)
@@ -198,9 +203,24 @@ def lay_set(lay:op.GLayer, config:LayConfig):
     # 自动设置坐标轴的范围
     lay.rescale()
 
+    # 手动设置
     lay.set_xlim(config.x_from,config.x_to,config.x_step)
     lay.set_ylim(config.y_from,config.y_to,config.y_step)
 
+    # 标题是否加粗
+    if config.x_bold:
+        n = Graph.get_int('nlayers')
+        for i in range(n):
+            Graph.set_int('active',i+1)
+            op.lt_exec(f'xb.text$="\\b({config.x_title})"')
+        
+
+    if config.y_bold:
+        n = Graph.get_int('nlayers')
+        for i in range(n):
+            Graph.set_int('active',i+1)
+            op.lt_exec(f'yl.text$="\\b({config.y_title})"')
+    
 # 函数功能说明：在一个图层中绘制一条线
 def plot_set(
         data:op.MSheet | op.WSheet,     #worksheet数据源

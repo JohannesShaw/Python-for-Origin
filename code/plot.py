@@ -40,7 +40,7 @@ def template(input_file,output_file):
 
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
 
-    po.lay_set(lay1,po.LayConfig())
+    po.lay_set(gp1,lay1,po.LayConfig())
     
 #------------------------参数设置------------------------
 
@@ -86,7 +86,7 @@ def plot_time_x(input_file, output_file1, output_file2):
 
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
 
-    po.lay_set(lay1,po.LayConfig())
+    po.lay_set(gp1,lay1,po.LayConfig())
 
     # 图2
     gp2 = op.new_graph()
@@ -94,7 +94,7 @@ def plot_time_x(input_file, output_file1, output_file2):
 
     po.plot_set(wks, lay2, colx='Time(ns)', coly='Current(A)', color='black', width=3, type='l')
 
-    po.lay_set(lay2,po.LayConfig())
+    po.lay_set(gp1,lay2,po.LayConfig())
 
 #------------------------参数设置------------------------
 
@@ -143,7 +143,7 @@ def plot_two_lines(input_file,input_file1,output_file):
 
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)1', color='red', width=3, type='l')
 
-    po.lay_set(lay1,po.LayConfig())
+    po.lay_set(gp1,lay1,po.LayConfig())
 
 #------------------------参数设置------------------------
 
@@ -195,8 +195,8 @@ def plot_two_in_graph(input_file,output_file):
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
     po.plot_set(wks, lay2, colx='Time(ns)', coly='Current(A)', color='black', width=3, type='l')
 
-    po.lay_set(lay1,po.LayConfig())
-    po.lay_set(lay2,po.LayConfig())
+    po.lay_set(gp,lay1,po.LayConfig())
+    po.lay_set(gp,lay2,po.LayConfig())
 
 #------------------------参数设置------------------------
 
