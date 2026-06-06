@@ -1,5 +1,4 @@
 import pandas as pd
-import os
 import pyorigin as po
 
 # 时间单位转换

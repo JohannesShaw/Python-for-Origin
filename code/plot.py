@@ -3,10 +3,13 @@ import originpro as op
 import pandas as pd
 
 
-def template(input_file,output_file):
+def fig4(input_file1,input_file2,input_file3,input_file4,output_file):
 
     # 读取数据
-    df = po.read_data(input_file)
+    df1 = po.read_data(input_file1)
+    df2 = po.read_data(input_file2)
+    df3 = po.read_data(input_file3)
+    df4 = po.read_data(input_file4)
 
     # 打开origin软件
     op.set_show(True)  
@@ -23,192 +26,444 @@ def template(input_file,output_file):
     #   wks2 = wb.add_sheet()
     wks = wb.add_sheet()
     
-    time_ns = df['Time(s)'] * 1e9
+    time1 = df1['time'] * 1e9;
+    time2 = df2['time'] * 1e9;
+    time3 = df3['time'] * 1e9;
+    time4 = df4['time'] * 1e9;
 
     #将数据加载到sheet里
     wks.from_df(pd.DataFrame({
-        'Time(ns)': time_ns,            # 将这一列数据重新在origin sheet里重新命名为Time(ns)
-        'Voltage(V)': df['Vout(V)'],    # 将这一列数据重新在origin sheet里重新命名为Voltage(V)
-        'Current(A)': df['Iout(A)']     # 将这一列数据重新在origin sheet里重新命名为Current(A)
+        'Time(ns)1': time1,           
+        'Voltage(V)1': df1['vout'],    
+        'Current(A)1': df1['iout'],   
+
+        'Time(ns)2': time2,           
+        'Voltage(V)2': df2['vout'],    
+        'Current(A)2': df2['iout'],
+
+        'Time(ns)3': time3,           
+        'Voltage(V)3': df3['vout'],    
+        'Current(A)3': df3['iout'],
+
+        'Time(ns)4': time4,           
+        'Voltage(V)4': df4['vout'],    
+        'Current(A)4': df4['iout'],
+
     }))
 
 
-    gp1 = op.new_graph()                # 新建一个图(该图默认只有一个图层)
-    lay1 = gp1[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
-
-#------------------------参数设置------------------------
-
-    po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
-
-    po.lay_set(lay1,po.LayConfig())
-    
-#------------------------参数设置------------------------
-
-    print("绘图完成")
-
-#------------------------保存设置------------------------
-
-    po.graph_save(gp1,output_file)
-  
-    po.project_save('template1.opju')
-
-#------------------------保存设置------------------------
-
-    # 关闭 Origin 应用程序
-    #op.exit()                           
-    
-
-#绘制两个图的示例
-def plot_time_x(input_file, output_file1, output_file2):
-
-
-    df = po.read_data(input_file)
-    
-    time_ns = df['Time(s)'] * 1e9 
-
-    op.set_show(True)  
-
-    op.new()
-
-    wb = op.new_book('w', 'Data')
-    
-    wks = wb.add_sheet()
-    
-    wks.from_df(pd.DataFrame({
-        'Time(ns)': time_ns,
-        'Voltage(V)': df['Vout(V)'],
-        'Current(A)': df['Iout(A)']
-    }))
-
-    gp1 = op.new_graph()
-    lay1 = gp1[0]
-#------------------------参数设置------------------------
-
-    po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
-
-    po.lay_set(lay1,po.LayConfig())
-
-    # 图2
-    gp2 = op.new_graph()
-    lay2 = gp2[0]
-
-    po.plot_set(wks, lay2, colx='Time(ns)', coly='Current(A)', color='black', width=3, type='l')
-
-    po.lay_set(lay2,po.LayConfig())
-
-#------------------------参数设置------------------------
-
-    print("绘图完成")
-
-#------------------------保存设置------------------------
-
-    po.graph_save(gp1,output_file1)
-    po.graph_save(gp2,output_file2)
-
-    po.project_save('template2.opju')
-
-#------------------------保存设置------------------------
-
-    
-#在一个图绘制两条线的示例
-def plot_two_lines(input_file,input_file1,output_file):
-
-    df = po.read_data(input_file)
-    
-    df1 = po.read_data(input_file1)
-
-    #展示绘图过程
-    op.set_show(True)
-
-    op.new()
-
-    wb = op.new_book('w', 'Data')
-
-    wks = wb.add_sheet()
-
-    time_ns = df['Time(s)'] * 1e9
-
-    wks.from_df(pd.DataFrame({
-        'Time(ns)': time_ns,
-        'Voltage(V)': df['Vout(V)'],
-        'Voltage(V)1': df1['Vout(V)']
-    }))
-
-    gp1 = op.new_graph()
-    lay1 = gp1[0]
-
-#------------------------参数设置------------------------
-
-    po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
-
-    po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)1', color='red', width=3, type='l')
-
-    po.lay_set(lay1,po.LayConfig())
-
-#------------------------参数设置------------------------
-
-    print("绘图完成")
-
-#------------------------保存设置------------------------
-
-    po.graph_save(gp1,output_file)
-
-    po.project_save('template3.opju')
-
-#------------------------保存设置------------------------
-    # 关闭 Origin 应用程序
-    #op.exit()  
-    
-    
-#在一个图中绘制多个图层，重点就是改变gp = op.new_graph(template='PAN2HORZ')使用的模板
-def plot_two_in_graph(input_file,output_file):
-
-    df = po.read_data(input_file)
-    
-    op.set_show(True)  
-
-    op.new()
-
-    wb = op.new_book('w', 'Data')
-    
-    wks = wb.add_sheet()
-    
-    time_ns = df['Time(s)'] * 1e9 
-
-    wks.from_df(pd.DataFrame({
-        'Time(ns)': time_ns,
-        'Voltage(V)': df['Vout(V)'],
-        'Current(A)': df['Iout(A)']
-    }))
-
-    # 使用 Origin 内置的2面板水平模板,也可用 'PAN2VERT' 上下排列,还有'PAN4'可以放四个图
-    # gp = op.new_graph(template='PAN2VERT') 使用内置的不用加 .otpu 
-    # 使用自己的模板要加 .otpu ,路径已经写好,这里只需要写模板名字即可，如下所示
-    # gp = op.new_graph(template='example.otpu')
-    gp = op.new_graph(template='PAN2VERT')
-    
-    lay1 = gp[0]
+    gp = op.new_graph(template='MYPAN4.otpu')                # 新建一个图(该图默认只有一个图层)
+    lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
     lay2 = gp[1]
+    lay3 = gp[2]
+    lay4 = gp[3]
 
 #------------------------参数设置------------------------
 
-    po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
-    po.plot_set(wks, lay2, colx='Time(ns)', coly='Current(A)', color='black', width=3, type='l')
+    po.plot_set(wks, lay1, colx='Time(ns)1', coly='Voltage(V)1', color='black', width=3, type='l')
 
-    po.lay_set(lay1,po.LayConfig())
-    po.lay_set(lay2,po.LayConfig())
+    po.lay_set(lay1,po.LayConfig(x_axis_title='Time/ns',y_axis_title='Vout/V',x_to=10,y_to=90,y_step=15))
 
+    po.plot_set(wks, lay2, colx='Time(ns)2', coly='Voltage(V)2', color='black', width=3, type='l')
+
+    po.lay_set(lay2,po.LayConfig(x_axis_title='Time/ns',y_axis_title='Vout/V',x_to=10,y_to=90,y_step=15))
+
+    po.plot_set(wks, lay3, colx='Time(ns)3', coly='Voltage(V)3', color='black', width=3, type='l')
+
+    po.lay_set(lay3,po.LayConfig(x_axis_title='Time/ns',y_axis_title='Vout/V',x_to=10,y_to=90,y_step=15))
+
+    po.plot_set(wks, lay4, colx='Time(ns)4', coly='Voltage(V)4', color='black', width=3, type='l')
+
+    po.lay_set(lay4,po.LayConfig(x_axis_title='Time/ns',y_axis_title='Vout/V',x_to=10,y_to=90,y_step=15))
+    
 #------------------------参数设置------------------------
 
     print("绘图完成")
-    
+
 #------------------------保存设置------------------------
 
     po.graph_save(gp,output_file)
-
+  
     po.project_save('template4.opju')
-#------------------------保存设置------------------------
+                          
+def fig5(input_file1,input_file2,input_file3,input_file4,output_file):
 
-    # 关闭 Origin 应用程序
-    #op.exit()  
+    # 读取数据
+    df1 = po.read_data(input_file1)
+    df2 = po.read_data(input_file2)
+    df3 = po.read_data(input_file3)
+    df4 = po.read_data(input_file4)
+
+    # 打开origin软件
+    op.set_show(True)  
+
+    #新建工程
+    op.new()
+
+    #新建一个工作表格
+    wb = op.new_book('w', 'Data')
     
+    #在 book里新建sheet,这里可以新建很多sheet
+    #   wks = wb.add_sheet() 自动命名为sheet1,sheet2,......
+    #   wks1 = wb.add_sheet()
+    #   wks2 = wb.add_sheet()
+    wks1 = wb.add_sheet()
+    wks2 = wb.add_sheet()
+    wks3 = wb.add_sheet()
+    wks4 = wb.add_sheet()
+    
+    time1 = df1['time'] * 1e9;
+    time2 = df2['time'] * 1e9;
+    time3 = df3['time'] * 1e9;
+    time4 = df4['time'] * 1e9;
+
+    #将数据加载到sheet里
+    wks1.from_df(pd.DataFrame({
+        'Time(ns)': time1,           
+        '5V': df1['vout'],       
+    }))
+
+    wks2.from_df(pd.DataFrame({
+        'Time(ns)': time2,           
+        '10V': df2['vout'],    
+    }))
+
+    wks3.from_df(pd.DataFrame({
+        'Time(ns)': time3,           
+        '20V': df3['vout'],    
+    }))
+
+    wks4.from_df(pd.DataFrame({
+        'Time(ns)': time4,           
+        '30V': df4['vout'],    
+    }))
+
+    gp = op.new_graph()                # 新建一个图(该图默认只有一个图层)
+    lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
+
+    po.plot_set(wks1, lay1, colx='Time(ns)', coly='5V', color='black', width=3, type='l')
+    po.plot_set(wks2, lay1, colx='Time(ns)', coly='10V', color='red', width=3, type='l')
+    po.plot_set(wks3, lay1, colx='Time(ns)', coly='20V', color='blue', width=3, type='l')
+    po.plot_set(wks4, lay1, colx='Time(ns)', coly='30V', color='#F08228', width=3, type='l')
+
+    po.lay_set(lay1,po.LayConfig(x_axis_title='Time/ns',y_axis_title='Vout/V',x_to=10,y_to=90,y_step=15))
+
+    po.graph_save(gp,output_file)
+
+    po.project_save('template5.opju')
+
+def fig6a(input_file1,input_file2,input_file3,output_file):
+     # 读取数据
+    df1 = po.read_data(input_file1)
+    df2 = po.read_data(input_file2)
+    df3 = po.read_data(input_file3)
+
+    filtered = df2[df2['TLP'] == 500]
+
+    df2 = filtered[['time', 'vout']]
+    # 打开origin软件
+    op.set_show(True)  
+
+    #新建工程
+    op.new()
+
+    #新建一个工作表格
+    wb = op.new_book('w', 'Data')
+    
+    #在 book里新建sheet,这里可以新建很多sheet
+    #   wks = wb.add_sheet() 自动命名为sheet1,sheet2,......
+    #   wks1 = wb.add_sheet()
+    #   wks2 = wb.add_sheet()
+    wks1 = wb.add_sheet()
+    wks2 = wb.add_sheet()
+    wks3 = wb.add_sheet()
+    
+    time1 = df1['#1_PESD18VF1BL_POS at 500 V_x'] * 1e9;
+    time2 = df2['time'] * 1e9;
+    time3 = df3['time'] * 1e9;
+
+    #将数据加载到sheet里
+    wks1.from_df(pd.DataFrame({
+        'Time(ns)': time1,           
+        'Measurement': df1['#1_PESD18VF1BL_POS at 500 V_y'],       
+    }))
+
+    wks2.from_df(pd.DataFrame({
+        'Time(ns)': time2,           
+        'Old simulation': df2['vout'],    
+    }))
+
+    wks3.from_df(pd.DataFrame({
+        'Time(ns)': time3,           
+        'New simulation': df3['vout'],    
+    }))
+
+    gp = op.new_graph()                # 新建一个图(该图默认只有一个图层)
+    lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
+
+    po.plot_set(wks1, lay1, colx='Time(ns)', coly='Measurement', color='black', width=3, type='l')
+    po.plot_set(wks2, lay1, colx='Time(ns)', coly='Old simulation', color='red', width=3, type='l')
+    po.plot_set(wks3, lay1, colx='Time(ns)', coly='New simulation', color='blue', width=3, type='l')
+
+    po.lay_set(lay1,po.LayConfig(x_axis_title='Time/ns',y_axis_title='Vout/V',x_to=10,y_to=90,y_step=15))
+
+    po.graph_save(gp,output_file)
+
+    po.project_save('template6a.opju')
+
+def fig6b(input_file1,input_file2,input_file3,output_file):
+     # 读取数据
+    df1 = po.read_data(input_file1)
+    df2 = po.read_data(input_file2)
+    df3 = po.read_data(input_file3)
+
+    filtered = df2[df2['TLP'] == 500]
+
+    df2 = filtered[['time', 'vout']]
+    # 打开origin软件
+    op.set_show(True)  
+
+    #新建工程
+    op.new()
+
+    #新建一个工作表格
+    wb = op.new_book('w', 'Data')
+    
+    #在 book里新建sheet,这里可以新建很多sheet
+    #   wks = wb.add_sheet() 自动命名为sheet1,sheet2,......
+    #   wks1 = wb.add_sheet()
+    #   wks2 = wb.add_sheet()
+    wks1 = wb.add_sheet()
+    wks2 = wb.add_sheet()
+    wks3 = wb.add_sheet()
+    
+    time1 = df1['#1_PESD18VF1BL_POS at 200 V_x'] * 1e9;
+    time2 = df2['time'] * 1e9;
+    time3 = df3['time'] * 1e9;
+
+    #将数据加载到sheet里
+    wks1.from_df(pd.DataFrame({
+        'Time(ns)': time1,           
+        'Measurement': df1['#1_PESD18VF1BL_POS at 200 V_y'],       
+    }))
+
+    wks2.from_df(pd.DataFrame({
+        'Time(ns)': time2,           
+        'Old simulation': df2['vout'],    
+    }))
+
+    wks3.from_df(pd.DataFrame({
+        'Time(ns)': time3,           
+        'New simulation': df3['vout'],    
+    }))
+
+    gp = op.new_graph()                # 新建一个图(该图默认只有一个图层)
+    lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
+
+    po.plot_set(wks1, lay1, colx='Time(ns)', coly='Measurement', color='black', width=3, type='l')
+    po.plot_set(wks2, lay1, colx='Time(ns)', coly='Old simulation', color='red', width=3, type='l')
+    po.plot_set(wks3, lay1, colx='Time(ns)', coly='New simulation', color='blue', width=3, type='l')
+
+    po.lay_set(lay1,po.LayConfig(x_axis_title='Time/ns',y_axis_title='Vout/V',x_to=10,y_to=90,y_step=15))
+
+    po.graph_save(gp,output_file)
+
+    po.project_save('template6b.opju')
+
+def fig6c(input_file1,input_file2,input_file3,output_file):
+     # 读取数据
+    df1 = po.read_data(input_file1)
+    df2 = po.read_data(input_file2)
+    df3 = po.read_data(input_file3)
+
+    filtered = df2[df2['TLP'] == 500]
+
+    df2 = filtered[['time', 'vout']]
+    # 打开origin软件
+    op.set_show(True)  
+
+    #新建工程
+    op.new()
+
+    #新建一个工作表格
+    wb = op.new_book('w', 'Data')
+    
+    #在 book里新建sheet,这里可以新建很多sheet
+    #   wks = wb.add_sheet() 自动命名为sheet1,sheet2,......
+    #   wks1 = wb.add_sheet()
+    #   wks2 = wb.add_sheet()
+    wks1 = wb.add_sheet()
+    wks2 = wb.add_sheet()
+    wks3 = wb.add_sheet()
+    
+    time1 = df1['#1_PESD18VF1BL_POS at 60 V_x'] * 1e9;
+    time2 = df2['time'] * 1e9;
+    time3 = df3['time'] * 1e9;
+
+    #将数据加载到sheet里
+    wks1.from_df(pd.DataFrame({
+        'Time(ns)': time1,           
+        'Measurement': df1['#1_PESD18VF1BL_POS at 60 V_y'],       
+    }))
+
+    wks2.from_df(pd.DataFrame({
+        'Time(ns)': time2,           
+        'Old simulation': df2['vout'],    
+    }))
+
+    wks3.from_df(pd.DataFrame({
+        'Time(ns)': time3,           
+        'New simulation': df3['vout'],    
+    }))
+
+    gp = op.new_graph()                # 新建一个图(该图默认只有一个图层)
+    lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
+
+    po.plot_set(wks1, lay1, colx='Time(ns)', coly='Measurement', color='black', width=3, type='l')
+    po.plot_set(wks2, lay1, colx='Time(ns)', coly='Old simulation', color='red', width=3, type='l')
+    po.plot_set(wks3, lay1, colx='Time(ns)', coly='New simulation', color='blue', width=3, type='l')
+
+    po.lay_set(lay1,po.LayConfig(x_axis_title='Time/ns',y_axis_title='Vout/V',x_to=10,y_to=90,y_step=15))
+
+    po.graph_save(gp,output_file)
+
+    po.project_save('template6c.opju')
+
+def fig7a(input_file1,input_file2,output_file):
+     # 读取数据
+    df1 = po.read_data(input_file1)
+    df2 = po.read_data(input_file2)
+
+    # 打开origin软件
+    op.set_show(True)  
+
+    #新建工程
+    op.new()
+
+    #新建一个工作表格
+    wb = op.new_book('w', 'Data')
+    
+    #在 book里新建sheet,这里可以新建很多sheet
+    #   wks = wb.add_sheet() 自动命名为sheet1,sheet2,......
+    #   wks1 = wb.add_sheet()
+    #   wks2 = wb.add_sheet()
+    wks1 = wb.add_sheet()
+    wks2 = wb.add_sheet()
+    
+    time1 = df1['#1_PESD18VF1BL_POS at 500 V_x'] * 1e9;
+    time2 = df2['time'] * 1e9;
+
+    #将数据加载到sheet里
+    wks1.from_df(pd.DataFrame({
+        'Time(ns)': time1,           
+        'Measurement': df1['#1_PESD18VF1BL_POS at 500 V_y'],       
+    }))
+
+    wks2.from_df(pd.DataFrame({
+        'Time(ns)': time2,           
+        'simulation': df2['iout'],    
+    }))
+
+    gp = op.new_graph()                # 新建一个图(该图默认只有一个图层)
+    lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
+
+    po.plot_set(wks1, lay1, colx='Time(ns)', coly='Measurement', color='black', width=3, type='l')
+    po.plot_set(wks2, lay1, colx='Time(ns)', coly='Simulation', color='red', width=3, type='l')
+
+    po.lay_set(lay1,po.LayConfig(x_axis_title='Time/ns',y_axis_title='Iout/A',y_to=10))
+
+    po.graph_save(gp,output_file)
+
+    po.project_save('template7a.opju')
+
+def fig7b(input_file1,input_file2,output_file):
+     # 读取数据
+    df1 = po.read_data(input_file1)
+    df2 = po.read_data(input_file2)
+
+    # 打开origin软件
+    op.set_show(True)  
+
+    #新建工程
+    op.new()
+
+    #新建一个工作表格
+    wb = op.new_book('w', 'Data')
+    
+    #在 book里新建sheet,这里可以新建很多sheet
+    #   wks = wb.add_sheet() 自动命名为sheet1,sheet2,......
+    #   wks1 = wb.add_sheet()
+    #   wks2 = wb.add_sheet()
+    wks1 = wb.add_sheet()
+    wks2 = wb.add_sheet()
+    wks3 = wb.add_sheet()
+    
+    #将数据加载到sheet里
+    wks1.from_df(pd.DataFrame({
+        'V': df1['vout'],           
+        'Simuation': df1['iout'],       
+    }))
+
+    wks2.from_df(pd.DataFrame({
+        'v': df2['Vwindow [V]'],         
+        'Measurement': df2['Iwindow [A]'],    
+    }))
+
+    gp = op.new_graph()                # 新建一个图(该图默认只有一个图层)
+    lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
+
+    po.plot_set(wks2, lay1, colx='V', coly='Measurement', color='black', width=3, type='l')
+    po.plot_set(wks1, lay1, colx='V', coly='Simuation', color='red', width=3, type='l')
+    
+
+    po.lay_set(lay1,po.LayConfig(x_axis_title='Iwindow/A',y_axis_title='Vwindow/V',x_from = 0,x_to=45,x_step=5,y_to=10))
+
+    po.graph_save(gp,output_file)
+
+    po.project_save('template7b.opju')
+
+def fig7c(input_file1,input_file2,output_file):
+     # 读取数据
+    df1 = po.read_data(input_file1)
+    df2 = po.read_data(input_file2)
+
+    # 打开origin软件
+    op.set_show(True)  
+
+    #新建工程
+    op.new()
+
+    #新建一个工作表格
+    wb = op.new_book('w', 'Data')
+    
+    #在 book里新建sheet,这里可以新建很多sheet
+    #   wks = wb.add_sheet() 自动命名为sheet1,sheet2,......
+    #   wks1 = wb.add_sheet()
+    #   wks2 = wb.add_sheet()
+    wks1 = wb.add_sheet()
+    wks2 = wb.add_sheet()
+    wks3 = wb.add_sheet()
+    
+    #将数据加载到sheet里
+    wks1.from_df(pd.DataFrame({
+        'TLP': df1['TLP'],           
+        'Simuation': df1['vout_max'],       
+    }))
+
+    wks2.from_df(pd.DataFrame({
+        'v': df2['TLP'],         
+        'Measurement': df2['Vpeak [V]'],    
+    }))
+
+    gp = op.new_graph()                # 新建一个图(该图默认只有一个图层)
+    lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
+
+    po.plot_set(wks2, lay1, colx='V', coly='Measurement', color='black', width=3, type='l')
+    po.plot_set(wks1, lay1, colx='TLP', coly='Simuation', color='red', width=3, type='l')
+    
+
+    po.lay_set(lay1,po.LayConfig(x_axis_title='TLP/V',y_axis_title='Vpeak/V',x_to=525,y_to=105,y_step=15,x_step=105))
+
+    po.graph_save(gp,output_file)
+
+    po.project_save('template7c.opju')
