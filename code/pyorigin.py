@@ -77,8 +77,10 @@ class LayConfig:
             y_axis_ticks       = 'inner',              # Y轴刻度朝向
             x_from             = None,                 # X轴起始值（None表示自动计算）
             x_to               = None,                 # X轴结束值（None表示自动计算）
+            x_step             = None,                 # X轴step（None表示自动计算）
             y_from             = None,                 # Y轴起始值（None表示自动计算）
-            y_to               = None                  # Y轴结束值（None表示自动计算）
+            y_to               = None,                 # Y轴结束值（None表示自动计算）
+            y_step             = None,                 # Y轴step（None表示自动计算）
                 ):
         
         self.x_axis_title = x_axis_title
@@ -109,8 +111,11 @@ class LayConfig:
 
         self.x_from = x_from
         self.x_to = x_to
+        self.x_step = x_step
+
         self.y_from = y_from
         self.y_to = y_to
+        self.y_step = y_step
 
 # 内部类，用户不用关心，以及调用与使用
 class __SaveParam:
@@ -193,15 +198,8 @@ def lay_set(lay:op.GLayer, config:LayConfig):
     # 自动设置坐标轴的范围
     lay.rescale()
 
-    # 轴范围
-    if config.x_from is not None:
-        lay.set_float('x.from', config.x_from)
-    if config.x_to is not None:
-        lay.set_float('x.to', config.x_to)
-    if config.y_from is not None:
-        lay.set_float('y.from', config.y_from)
-    if config.y_to is not None:
-        lay.set_float('y.to', config.y_to)
+    lay.set_xlim(config.x_from,config.x_to,config.x_step)
+    lay.set_ylim(config.y_from,config.y_to,config.y_step)
 
 # 函数功能说明：在一个图层中绘制一条线
 def plot_set(
