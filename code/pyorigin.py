@@ -59,11 +59,13 @@ class LayConfig:
             self,
             x_title            = 'x',                  # X轴标题文字
             y_title            = 'y',                  # Y轴标题文字
+            legend_title       = None,                 # 图例标题
             x_font             = 'Times New Roman',    # X轴标题字体
             y_font             = 'Times New Roman',    # Y轴标题字体
+            legend_font        = 'Times New Roman',    # 图例字体
             x_bold             = 1,                    # X轴标题字体是否加粗（1=加粗，0=不加粗）
             y_bold             = 1,                    # Y轴标题字体是否加粗（1=加粗，0=不加粗）
-            legend_font        = 'Times New Roman',    # 图例字体
+            legend_bold        = 1,                    # 图例标题字体是否加粗（1=加粗，0=不加粗）
             x_font_size        = 36,                   # X轴标题字体大小
             y_font_size        = 36,                   # Y轴标题字体大小
             legend_font_size   = 26,                   # 图例字体大小
@@ -87,6 +89,7 @@ class LayConfig:
         
         self.x_title = x_title
         self.y_title = y_title
+        self.legend_title = legend_title
 
         self.x_font = _FONT[x_font]
         self.y_font = _FONT[y_font]
@@ -94,6 +97,7 @@ class LayConfig:
 
         self.x_bold = x_bold
         self.y_bold = y_bold
+        self.legend_bold = legend_bold
 
         self.x_font_size = x_font_size
         self.y_font_size = y_font_size
@@ -151,6 +155,21 @@ class __SaveParam:
 
         return self.kwargs.get('template', '')
 
+# 记录函数调用次数
+class __CallCounter:
+    def __init__(self, func):
+        self.func = func
+        self.call_count = 0
+
+    def __call__(self, *args, **kwargs):
+        
+        self.call_count += 1
+
+        return self.func(*args, **kwargs)
+    
+    def get_num(self):
+        return self.call_count
+    
 # 内部使用的装饰器，用于保存图像保存函数的参数，用户不用关心
 __saver = __SaveParam()
 op.new_graph = __saver(op.new_graph)
@@ -207,21 +226,54 @@ def lay_set(Graph:op.GPage,lay:op.GLayer, config:LayConfig):
     lay.set_xlim(config.x_from,config.x_to,config.x_step)
     lay.set_ylim(config.y_from,config.y_to,config.y_step)
 
-    # 标题是否加粗
+    # X标题是否加粗
     if config.x_bold:
         n = Graph.get_int('nlayers')
         for i in range(n):
             Graph.set_int('active',i+1)
             op.lt_exec(f'xb.text$="\\b({config.x_title})"')
         
-
+    # Y标题是否加粗
     if config.y_bold:
         n = Graph.get_int('nlayers')
         for i in range(n):
             Graph.set_int('active',i+1)
             op.lt_exec(f'yl.text$="\\b({config.y_title})"')
     
+    # 设置图例
+    _legend_set(config.legend_title,config.legend_bold)
+
+# 内部使用用户不用关心
+def _legend_set(le_title,le_bold):
+
+    if not le_title :
+
+        if le_bold :
+            num = plot_set.get_num()
+            text_parts = []
+
+            for i in range(num):
+                text_parts.append(f"\\l({i+1})\\b(%({i+1}))")
+        
+            full_text = "\n".join(text_parts)
+            op.lt_exec(f'legend.text$="{full_text}"')
+            plot_set.call_count = 0
+
+    else:
+
+        if le_bold :
+            num = plot_set.get_num()
+            text_parts = []
+
+            for i in range(num):
+                text_parts.append(f"\\l({i+1})\\b({le_title[i]})")
+        
+            full_text = "\n".join(text_parts)
+            op.lt_exec(f'legend.text$="{full_text}"')
+            plot_set.call_count = 0
+
 # 函数功能说明：在一个图层中绘制一条线
+@__CallCounter
 def plot_set(
         data:op.MSheet | op.WSheet,     #worksheet数据源
         lay:op.GLayer,                  #图层对象
@@ -258,7 +310,7 @@ def graph_save(
 
     if name.endswith('.png'):
         op.find_graph(graph.name).save_fig(path,replace=True,width=width, ratio=ratio)
-        print(f"图片文件保存成功,保存在{path}")
+        print(f"图片文件保存成功😊,保存在{path}")
     else:
         print("不支持该图片文件格式保存")
 
@@ -282,7 +334,7 @@ def project_save(
 
     if name.endswith('.opju'):
         op.save(path)
-        print(f"工程文件保存成功,保存在{path}")
+        print(f"工程文件保存成功😊,保存在{path}")
     else:
         print("不支持该工程文件格式保存")
 # 解析列数据，提取数值和单位，并进行转换
