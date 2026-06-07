@@ -411,7 +411,7 @@ def fig7b(input_file1,input_file2,output_file):
     #将数据加载到sheet里
     wks1.from_df(pd.DataFrame({
         'V': df1['vout'],           
-        'Simuation': df1['iout'],       
+        'Simulation': df1['iout'],       
     }))
 
     wks2.from_df(pd.DataFrame({
@@ -423,7 +423,7 @@ def fig7b(input_file1,input_file2,output_file):
     lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
 
     po.plot_set(wks2, lay1, colx='V', coly='Measurement', color='black', width=3, type='l')
-    po.plot_set(wks1, lay1, colx='V', coly='Simuation', color='red', width=3, type='l')
+    po.plot_set(wks1, lay1, colx='V', coly='Simulation', color='red', width=3, type='l')
     
 
     po.lay_set(gp,lay1,po.LayConfig(x_title='Iwindow/A',y_title='Vwindow/V',x_from = 0,x_to=45,x_step=5,y_to=10))
@@ -459,7 +459,7 @@ def fig7c(input_file1,input_file2,output_file):
     #将数据加载到sheet里
     wks1.from_df(pd.DataFrame({
         'TLP': df1['TLP'],           
-        'Simuation': df1['vout_max'],       
+        'Simulation': df1['vout_max'],       
     }))
 
     wks2.from_df(pd.DataFrame({
@@ -471,7 +471,7 @@ def fig7c(input_file1,input_file2,output_file):
     lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
 
     po.plot_set(wks2, lay1, colx='V', coly='Measurement', color='black', width=3, type='l')
-    po.plot_set(wks1, lay1, colx='TLP', coly='Simuation', color='red', width=3, type='l')
+    po.plot_set(wks1, lay1, colx='TLP', coly='Simulation', color='red', width=3, type='l')
     
 
     po.lay_set(gp,lay1,po.LayConfig(x_title='TLP/V',y_title='Vpeak/V',x_to=525,y_to=105,y_step=15,x_step=105))
