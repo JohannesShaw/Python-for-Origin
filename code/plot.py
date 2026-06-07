@@ -209,6 +209,8 @@ def fig6a(input_file1,input_file2,input_file3,output_file):
 
     po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
 
+    print("绘图完成")
+
     po.graph_save(gp,output_file)
 
     po.project_save('template6a.opju')
@@ -267,6 +269,8 @@ def fig6b(input_file1,input_file2,input_file3,output_file):
     po.plot_set(wks3, lay1, colx='Time(ns)', coly='New simulation', color='blue', width=3, type='l')
 
     po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
+
+    print("绘图完成")
 
     po.graph_save(gp,output_file)
 
@@ -327,6 +331,8 @@ def fig6c(input_file1,input_file2,input_file3,output_file):
 
     po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
 
+    print("绘图完成")
+
     po.graph_save(gp,output_file)
 
     po.project_save('template6c.opju')
@@ -374,6 +380,8 @@ def fig7a(input_file1,input_file2,output_file):
 
     po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Iout/A',x_to=10,y_to=10))
 
+    print("绘图完成")
+
     po.graph_save(gp,output_file)
 
     po.project_save('template7a.opju')
@@ -419,6 +427,8 @@ def fig7b(input_file1,input_file2,output_file):
     
 
     po.lay_set(gp,lay1,po.LayConfig(x_title='Iwindow/A',y_title='Vwindow/V',x_from = 0,x_to=45,x_step=5,y_to=10))
+
+    print("绘图完成")
 
     po.graph_save(gp,output_file)
 
@@ -466,6 +476,8 @@ def fig7c(input_file1,input_file2,output_file):
 
     po.lay_set(gp,lay1,po.LayConfig(x_title='TLP/V',y_title='Vpeak/V',x_to=525,y_to=105,y_step=15,x_step=105))
 
+    print("绘图完成")
+    
     po.graph_save(gp,output_file)
 
     po.project_save('template7c.opju')
