@@ -62,19 +62,19 @@ def fig4(input_file1,input_file2,input_file3,input_file4,output_file):
 
     po.plot_set(wks, lay1, colx='Time(ns)1', coly='Voltage(V)1', color='black', width=3, type='l')
 
-    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
+    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title = ['Vout'],x_to=10,y_to=90,y_step=15))
 
     po.plot_set(wks, lay2, colx='Time(ns)2', coly='Voltage(V)2', color='black', width=3, type='l')
 
-    po.lay_set(gp,lay2,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
+    po.lay_set(gp,lay2,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title = ['Vout'],x_to=10,y_to=90,y_step=15))
 
     po.plot_set(wks, lay3, colx='Time(ns)3', coly='Voltage(V)3', color='black', width=3, type='l')
 
-    po.lay_set(gp,lay3,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
+    po.lay_set(gp,lay3,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title = ['Vout'],x_to=10,y_to=90,y_step=15))
 
     po.plot_set(wks, lay4, colx='Time(ns)4', coly='Voltage(V)4', color='black', width=3, type='l')
 
-    po.lay_set(gp,lay4,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
+    po.lay_set(gp,lay4,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title = ['Vout'],x_to=10,y_to=90,y_step=15))
     
     #------------------------参数设置------------------------
 
