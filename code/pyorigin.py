@@ -84,8 +84,9 @@ class LayConfig:
             x_step             = None,                 # X轴step（None表示自动计算）
             y_from             = None,                 # Y轴起始值（None表示自动计算）
             y_to               = None,                 # Y轴结束值（None表示自动计算）
-            y_step             = None                  # y轴step（None表示自动计算）
-                ):
+            y_step             = None,                 # y轴step（None表示自动计算）
+            aa                 = 1                     # 抗锯齿功能（1=开启，0=关闭）
+            ):
         
         self.x_title = x_title
         self.y_title = y_title
@@ -126,6 +127,8 @@ class LayConfig:
         self.y_to = y_to
         self.y_step = y_step
 
+        self.aa = aa
+
 # 内部类，用户不用关心，以及调用与使用
 class __SaveParam:
     def __init__(self):
@@ -155,21 +158,7 @@ class __SaveParam:
 
         return self.kwargs.get('template', '')
 
-# 记录函数调用次数
-class __CallCounter:
-    def __init__(self, func):
-        self.func = func
-        self.call_count = 0
 
-    def __call__(self, *args, **kwargs):
-        
-        self.call_count += 1
-
-        return self.func(*args, **kwargs)
-    
-    def get_num(self):
-        return self.call_count
-    
 # 内部使用的装饰器，用于保存图像保存函数的参数，用户不用关心
 __saver = __SaveParam()
 op.new_graph = __saver(op.new_graph)
@@ -219,6 +208,9 @@ def lay_set(Graph:op.GPage,lay:op.GLayer, config:LayConfig):
     lay.set_float('x.ticks', config.x_axis_ticks)
     lay.set_float('y.ticks', config.y_axis_ticks)
 
+    # 抗锯齿
+    Graph.set_int('aa',config.aa)
+
     # 自动设置坐标轴的范围
     lay.rescale()
 
@@ -241,39 +233,38 @@ def lay_set(Graph:op.GPage,lay:op.GLayer, config:LayConfig):
             op.lt_exec(f'yl.text$="\\b({config.y_title})"')
     
     # 设置图例
-    _legend_set(config.legend_title,config.legend_bold)
+    if config.legend_bold:
 
-# 内部使用用户不用关心
-def _legend_set(le_title,le_bold):
+        if not config.legend_title:
+            # 获取当前page有多少图层
+            layers = Graph.get_int('nlayers')
+            for m in range(layers):
 
-    if not le_title :
+                Graph.set_int('active',m+1) # 激活指定图层
+                op.lt_exec('layer -c;')
+                count = op.lt_int('count')  # 获取当前图层有多少条数据
+                text_parts = []
+                for n in range(count):
+                    text_parts.append(f"\\l({n+1})\\b(%({n+1}))")
 
-        if le_bold :
-            num = plot_set.get_num()
-            text_parts = []
+                full_text = "\n".join(text_parts)
+                op.lt_exec(f'legend.text$="{full_text}"')
 
-            for i in range(num):
-                text_parts.append(f"\\l({i+1})\\b(%({i+1}))")
-        
-            full_text = "\n".join(text_parts)
-            op.lt_exec(f'legend.text$="{full_text}"')
-            plot_set.call_count = 0
+        else:
+            layers = Graph.get_int('nlayers')
+            for m in range(layers):
 
-    else:
+                Graph.set_int('active',m+1) # 激活指定图层
+                op.lt_exec('layer -c;')
+                count = op.lt_int('count')  # 获取当前图层有多少条数据
+                text_parts = []
+                for n in range(count):
+                    text_parts.append(f"\\l({n+1})\\b({config.legend_title[n]})")
 
-        if le_bold :
-            num = plot_set.get_num()
-            text_parts = []
-
-            for i in range(num):
-                text_parts.append(f"\\l({i+1})\\b({le_title[i]})")
-        
-            full_text = "\n".join(text_parts)
-            op.lt_exec(f'legend.text$="{full_text}"')
-            plot_set.call_count = 0
+                full_text = "\n".join(text_parts)
+                op.lt_exec(f'legend.text$="{full_text}"')
 
 # 函数功能说明：在一个图层中绘制一条线
-@__CallCounter
 def plot_set(
         data:op.MSheet | op.WSheet,     #worksheet数据源
         lay:op.GLayer,                  #图层对象
