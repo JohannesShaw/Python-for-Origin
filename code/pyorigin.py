@@ -1,9 +1,12 @@
 # -----------------！！！！！注意！！！！！------------------------
 
 # 此文件不要修改
-# 可编辑的.py文件为plot.py main.py data_deal.py
+# 此文件为底层实现,不可修改
+# 用户可编辑的.py文件为plot.py main.py data_deal.py,在里面编辑自己的绘图函数
 
 # -----------------！！！！！注意！！！！！------------------------
+
+
 import pandas as pd
 import originpro as op
 from pathlib import Path
@@ -129,6 +132,87 @@ class LayConfig:
 
         self.aa = aa
 
+    def get_status(self):
+
+        key = (bool(self.legend_title),bool(self.legend_bold))
+
+        status = {
+            (True,True) : 'title_bold', # 有标题加粗
+            (True,False): 'title_no',   # 有标题不加粗
+            (False,True): 'no_bold',    # 无标题加粗
+            (False,False): 'default'    # 无标题不加粗（默认）
+        }
+
+        return status.get(key,'default') # 如果没有匹配到就返回默认值
+    
+    # 有标题加粗
+    def _handle_title_bold(self,Graph:op.GPage):
+        layers = Graph.get_int('nlayers')
+        for m in range(layers):
+
+            Graph.set_int('active',m+1) # 激活指定图层
+            op.lt_exec('layer -c;')
+            count = op.lt_int('count')  # 获取当前图层有多少条数据
+
+            text_parts = []
+            for n in range(count):
+                 text_parts.append(f"\\l({n+1})\\b({self.legend_title[n]})")
+
+            full_text = "\n".join(text_parts)
+            op.lt_exec(f'legend.text$="{full_text}"')
+
+    # 无标题加粗
+    def _handle_no_bold(self,Graph:op.GPage):
+
+        layers = Graph.get_int('nlayers')
+        for m in range(layers):
+
+            Graph.set_int('active',m+1) # 激活指定图层
+            op.lt_exec('layer -c;')
+            count = op.lt_int('count')  # 获取当前图层有多少条数据
+
+            text_parts = []
+            for n in range(count):
+                text_parts.append(f"\\l({n+1})\\b(%({n+1}))")
+
+            full_text = "\n".join(text_parts)
+            op.lt_exec(f'legend.text$="{full_text}"')
+
+    # 有标题不加粗
+    def _handle_title_no(self,Graph:op.GPage):
+
+        layers = Graph.get_int('nlayers')
+        for m in range(layers):
+
+            Graph.set_int('active',m+1) # 激活指定图层
+            op.lt_exec('layer -c;')
+            count = op.lt_int('count')  # 获取当前图层有多少条数据
+
+            text_parts = []
+            for n in range(count):
+                text_parts.append(f"\\l({n+1}){self.legend_title[n]}")
+
+            full_text = "\n".join(text_parts)
+            op.lt_exec(f'legend.text$="{full_text}"')
+
+    # 无标题不加粗（默认）
+    def _handle_default(self,Graph:op.GPage):
+
+        pass
+
+    # 具体实现
+    def execute(self,Graph:op.GPage):
+
+        actions = {
+            'title_bold': self._handle_title_bold,
+            'no_bold':   self._handle_no_bold,
+            'title_no':  self._handle_title_no,
+            'default':  self._handle_default
+        }
+        
+        func = actions.get(self.get_status(), self._handle_default)
+        func(Graph)   
+    
 # 内部类，用户不用关心，以及调用与使用
 class __SaveParam:
     def __init__(self):
@@ -232,37 +316,8 @@ def lay_set(Graph:op.GPage,lay:op.GLayer, config:LayConfig):
             Graph.set_int('active',i+1)
             op.lt_exec(f'yl.text$="\\b({config.y_title})"')
     
-    # 设置图例
-    if config.legend_bold:
-
-        if not config.legend_title:
-            # 获取当前page有多少图层
-            layers = Graph.get_int('nlayers')
-            for m in range(layers):
-
-                Graph.set_int('active',m+1) # 激活指定图层
-                op.lt_exec('layer -c;')
-                count = op.lt_int('count')  # 获取当前图层有多少条数据
-                text_parts = []
-                for n in range(count):
-                    text_parts.append(f"\\l({n+1})\\b(%({n+1}))")
-
-                full_text = "\n".join(text_parts)
-                op.lt_exec(f'legend.text$="{full_text}"')
-
-        else:
-            layers = Graph.get_int('nlayers')
-            for m in range(layers):
-
-                Graph.set_int('active',m+1) # 激活指定图层
-                op.lt_exec('layer -c;')
-                count = op.lt_int('count')  # 获取当前图层有多少条数据
-                text_parts = []
-                for n in range(count):
-                    text_parts.append(f"\\l({n+1})\\b({config.legend_title[n]})")
-
-                full_text = "\n".join(text_parts)
-                op.lt_exec(f'legend.text$="{full_text}"')
+    # 设置是否加粗
+    config.execute(Graph)
 
 # 函数功能说明：在一个图层中绘制一条线
 def plot_set(
@@ -270,9 +325,9 @@ def plot_set(
         lay:op.GLayer,                  #图层对象
         colx,                           #worksheet中作为x轴数据的列名
         coly,                           #worksheet中作为y轴数据的列名
-        color:str='black',              #线条颜色
+        color='black',                  #线条颜色 参数调用示例：color='black'，color=(200,300,100) , color='#F08228'分别对应颜色名称,rgb,通过rgb设置好的颜色可在origin中查看
         width:float = 3,                #线条宽度
-        type='l'                        #图表类型，'l'(Line Plot) 's'(Scatter Plot) 'y' (Line Symbols) 'c' (Column) '?' auto(template)
+        type='l'                        #图表类型，'l'(Line Plot) 's'(Scatter Plot) 'y' (Line Symbols) 'c' (Column) 
         ):
 
     plot = lay.add_plot(data, colx=colx, coly=coly, type=type)
