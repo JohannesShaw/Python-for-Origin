@@ -12,10 +12,6 @@ import originpro as op
 from pathlib import Path
 
 _FONT = {
-    'Times New Roman': 345,
-    'Arial': 69,
-    '宋体': 1,
-    '微软雅黑': 55,
     'inner': 5,
     'outer': 10
 }
@@ -65,7 +61,10 @@ class LayConfig:
             legend_title       = None,                 # 图例标题
             x_font             = 'Times New Roman',    # X轴标题字体
             y_font             = 'Times New Roman',    # Y轴标题字体
-            legend_font        = 'Times New Roman',    # 图例字体
+            legend_font        = 'Times New Roman',    # 图例字体Y
+            x_color            = 'black',              # X标题颜色
+            y_color            = 'black',              # Y标题颜色
+            legend_color       = 'black',              # 图例标题颜色
             x_bold             = 1,                    # X轴标题字体是否加粗（1=加粗，0=不加粗）
             y_bold             = 1,                    # Y轴标题字体是否加粗（1=加粗，0=不加粗）
             legend_bold        = 1,                    # 图例标题字体是否加粗（1=加粗，0=不加粗）
@@ -95,9 +94,13 @@ class LayConfig:
         self.y_title = y_title
         self.legend_title = legend_title
 
-        self.x_font = _FONT[x_font]
-        self.y_font = _FONT[y_font]
-        self.legend_font = _FONT[legend_font]
+        self.x_font = op.lt_int(f'font({x_font})')
+        self.y_font = op.lt_int(f'font({y_font})')
+        self.legend_font = op.lt_int(f'font({legend_font})')
+
+        self.x_color = op.lt_int(f'color({x_color})')
+        self.y_color = op.lt_int(f'color({y_color})')
+        self.legend_color = op.lt_int(f'color({legend_color})')
 
         self.x_bold = x_bold
         self.y_bold = y_bold
@@ -116,8 +119,8 @@ class LayConfig:
         self.x_axis_pt = x_axis_pt
         self.y_axis_pt = y_axis_pt
 
-        self.x_axis_font = _FONT[x_axis_font]
-        self.y_axis_font = _FONT[y_axis_font]
+        self.x_axis_font = op.lt_int(f'font({x_axis_font})')
+        self.y_axis_font = op.lt_int(f'font({y_axis_font})')
 
         self.x_axis_ticks = _FONT[x_axis_ticks]
         self.y_axis_ticks = _FONT[y_axis_ticks]
@@ -146,62 +149,51 @@ class LayConfig:
         return status.get(key,'default') # 如果没有匹配到就返回默认值
     
     # 有标题加粗
-    def _handle_title_bold(self,Graph:op.GPage):
-        layers = Graph.get_int('nlayers')
-        for m in range(layers):
+    def _handle_title_bold(self):
+        
+        op.lt_exec('layer -c;')
+        count = op.lt_int('count')  # 获取当前图层有多少条数据
 
-            Graph.set_int('active',m+1) # 激活指定图层
-            op.lt_exec('layer -c;')
-            count = op.lt_int('count')  # 获取当前图层有多少条数据
+        text_parts = []
+        for n in range(count):
+            text_parts.append(f"\\l({n+1})\\b({self.legend_title[n]})")
 
-            text_parts = []
-            for n in range(count):
-                 text_parts.append(f"\\l({n+1})\\b({self.legend_title[n]})")
-
-            full_text = "\n".join(text_parts)
-            op.lt_exec(f'legend.text$="{full_text}"')
+        full_text = "\n".join(text_parts)
+        op.lt_exec(f'legend.text$="{full_text}"')
 
     # 无标题加粗
-    def _handle_no_bold(self,Graph:op.GPage):
+    def _handle_no_bold(self):
 
-        layers = Graph.get_int('nlayers')
-        for m in range(layers):
+        op.lt_exec('layer -c;')
+        count = op.lt_int('count')  # 获取当前图层有多少条数据
+        print(count)
+        text_parts = []
+        for n in range(count):
+            text_parts.append(f"\\l({n+1})\\b(%({n+1}))")
 
-            Graph.set_int('active',m+1) # 激活指定图层
-            op.lt_exec('layer -c;')
-            count = op.lt_int('count')  # 获取当前图层有多少条数据
-
-            text_parts = []
-            for n in range(count):
-                text_parts.append(f"\\l({n+1})\\b(%({n+1}))")
-
-            full_text = "\n".join(text_parts)
-            op.lt_exec(f'legend.text$="{full_text}"')
+        full_text = "\n".join(text_parts)
+        op.lt_exec(f'legend.text$="{full_text}"')
 
     # 有标题不加粗
-    def _handle_title_no(self,Graph:op.GPage):
+    def _handle_title_no(self):
 
-        layers = Graph.get_int('nlayers')
-        for m in range(layers):
+        op.lt_exec('layer -c;')
+        count = op.lt_int('count')  # 获取当前图层有多少条数据
 
-            Graph.set_int('active',m+1) # 激活指定图层
-            op.lt_exec('layer -c;')
-            count = op.lt_int('count')  # 获取当前图层有多少条数据
+        text_parts = []
+        for n in range(count):
+            text_parts.append(f"\\l({n+1}){self.legend_title[n]}")
 
-            text_parts = []
-            for n in range(count):
-                text_parts.append(f"\\l({n+1}){self.legend_title[n]}")
-
-            full_text = "\n".join(text_parts)
-            op.lt_exec(f'legend.text$="{full_text}"')
+        full_text = "\n".join(text_parts)
+        op.lt_exec(f'legend.text$="{full_text}"')
 
     # 无标题不加粗（默认）
-    def _handle_default(self,Graph:op.GPage):
+    def _handle_default(self):
 
         pass
 
     # 具体实现
-    def execute(self,Graph:op.GPage):
+    def execute(self):
 
         actions = {
             'title_bold': self._handle_title_bold,
@@ -211,7 +203,7 @@ class LayConfig:
         }
         
         func = actions.get(self.get_status(), self._handle_default)
-        func(Graph)   
+        func()   
     
 # 内部类，用户不用关心，以及调用与使用
 class __SaveParam:
@@ -260,27 +252,37 @@ op.new_graph = __saver(op.new_graph)
 # po.lay_set(lay2, lay2_config)
 def lay_set(Graph:op.GPage,lay:op.GLayer, config:LayConfig):
 
+    lay.activate()
     # 设置坐标轴标题
     lay.axis('x').title = config.x_title
     lay.axis('y').title = config.y_title
-
+    
     # 字体 & 大小
     lay.label('xb').set_int('font', config.x_font)
     lay.label('xb').set_int('fsize', config.x_font_size)
-    
+    lay.label('xb').set_int('color',config.x_color)
+
+    if config.x_bold:
+        op.lt_exec(f'xb.text$="\\b({config.x_title})"')
+
     lay.label('yl').set_int('font', config.y_font)
     lay.label('yl').set_int('fsize', config.y_font_size)
+    lay.label('yl').set_int('color',config.y_color)
+
+    if config.y_bold:
+        op.lt_exec(f'yl.text$="\\b({config.y_title})"')
 
     lay.label('legend').set_int('font', config.legend_font)
     lay.label('legend').set_int('fsize', config.legend_font_size)
+    lay.label('legend').set_int('color',config.legend_color)
 
     # 坐标轴线厚度
     lay.set_float('x.thickness', config.x_axis_thickness)
     lay.set_float('y.thickness', config.y_axis_thickness)
     
     # 坐标轴加粗：True→1，False→0
-    lay.set_float('x.label.bold', config.x_axis_bold )
-    lay.set_float('y.label.bold', config.y_axis_bold )
+    lay.set_float('x.label.bold', config.x_axis_bold)
+    lay.set_float('y.label.bold', config.y_axis_bold)
 
     # 刻度数字大小 & 字体
     lay.set_float('x.label.pt', config.x_axis_pt)
@@ -301,23 +303,9 @@ def lay_set(Graph:op.GPage,lay:op.GLayer, config:LayConfig):
     # 手动设置
     lay.set_xlim(config.x_from,config.x_to,config.x_step)
     lay.set_ylim(config.y_from,config.y_to,config.y_step)
-
-    # X标题是否加粗
-    if config.x_bold:
-        n = Graph.get_int('nlayers')
-        for i in range(n):
-            Graph.set_int('active',i+1)
-            op.lt_exec(f'xb.text$="\\b({config.x_title})"')
-        
-    # Y标题是否加粗
-    if config.y_bold:
-        n = Graph.get_int('nlayers')
-        for i in range(n):
-            Graph.set_int('active',i+1)
-            op.lt_exec(f'yl.text$="\\b({config.y_title})"')
     
     # 设置是否加粗
-    config.execute(Graph)
+    config.execute()
 
 # 函数功能说明：在一个图层中绘制一条线
 def plot_set(
@@ -330,6 +318,7 @@ def plot_set(
         type='l'                        #图表类型，'l'(Line Plot) 's'(Scatter Plot) 'y' (Line Symbols) 'c' (Column) 
         ):
 
+    lay.activate()
     plot = lay.add_plot(data, colx=colx, coly=coly, type=type)
     plot.set_float('line.width', width)  # 设置线宽
     plot.color = color
@@ -383,6 +372,8 @@ def project_save(
         print(f"工程文件保存成功😊,保存在{path}")
     else:
         print("不支持该工程文件格式保存")
+
+
 # 解析列数据，提取数值和单位，并进行转换
 # 参数说明：
 # series：表格中的某一列
@@ -518,4 +509,14 @@ def _path_set(file:str):
     else:
         file_path = None
     return str(file_path)
+
+
+# 暂定封装
+def add_layer(Graph:op.GPage,location,type = 0):
+
+    layer = Graph.add_layer(type=type)
+
+    op.lt_exec('legend')    
+
+    return layer
 
