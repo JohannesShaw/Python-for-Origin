@@ -166,7 +166,6 @@ class LayConfig:
 
         op.lt_exec('layer -c;')
         count = op.lt_int('count')  # 获取当前图层有多少条数据
-        print(count)
         text_parts = []
         for n in range(count):
             text_parts.append(f"\\l({n+1})\\b(%({n+1}))")
