@@ -26,55 +26,48 @@ def fig4(input_file1,input_file2,input_file3,input_file4,output_file):
     #   wks2 = wb.add_sheet()
     wks = wb.add_sheet()
     
-    time1 = df1['time'] * 1e9;
-    time2 = df2['time'] * 1e9;
-    time3 = df3['time'] * 1e9;
-    time4 = df4['time'] * 1e9;
+    time1 = df1['Time(s)'] * 1e9;
+    time2 = df2['Time(s)'] * 1e9;
+    time3 = df3['Time(s)'] * 1e9;
+    time4 = df4['Time(s)'] * 1e9;
 
     #将数据加载到sheet里
     wks.from_df(pd.DataFrame({
         'Time(ns)1': time1,           
-        'Voltage(V)1': df1['vout'],    
-        'Current(A)1': df1['iout'],   
+        'Voltage(V)1': df1['Voltage(V)'],    
+        'Current(A)1': df1['Current(A)'],   
 
         'Time(ns)2': time2,           
-        'Voltage(V)2': df2['vout'],    
-        'Current(A)2': df2['iout'],
+        'Voltage(V)2': df2['Voltage(V)'],    
+        'Current(A)2': df2['Current(A)'],
 
         'Time(ns)3': time3,           
-        'Voltage(V)3': df3['vout'],    
-        'Current(A)3': df3['iout'],
+        'Voltage(V)3': df3['Voltage(V)'],    
+        'Current(A)3': df3['Current(A)'],
 
         'Time(ns)4': time4,           
-        'Voltage(V)4': df4['vout'],    
-        'Current(A)4': df4['iout'],
+        'Voltage(V)4': df4['Voltage(V)'],    
+        'Current(A)4': df4['Current(A)'],
 
     }))
 
 
-    gp = op.new_graph(template='MYPAN4.otpu')                # 新建一个图(该图默认只有一个图层)
-    lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
-    lay2 = gp[1]
-    lay3 = gp[2]
-    lay4 = gp[3]
+    gp = op.new_graph()                
+    lay1 = gp[0]                      
+
 
     #------------------------参数设置------------------------
 
-    po.plot_set(wks, lay1, colx='Time(ns)1', coly='Voltage(V)1', color='black', width=3, type='l')
+    po.plot_set(wks, lay1, colx='Time(ns)4', coly='Voltage(V)4', color="black", width=3, type='l')
 
-    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title = ['Vout'],x_to=10,y_to=90,y_step=15))
+    po.plot_set(wks, lay1, colx='Time(ns)1', coly='Voltage(V)1', color='red', width=3, type='l')
 
-    po.plot_set(wks, lay2, colx='Time(ns)2', coly='Voltage(V)2', color='black', width=3, type='l')
+    po.plot_set(wks, lay1, colx='Time(ns)2', coly='Voltage(V)2', color='blue', width=3, type='l')
 
-    po.lay_set(gp,lay2,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title = ['Vout'],x_to=10,y_to=90,y_step=15))
+    po.plot_set(wks, lay1, colx='Time(ns)3', coly='Voltage(V)3', color="#EB7114", width=3, type='l')
 
-    po.plot_set(wks, lay3, colx='Time(ns)3', coly='Voltage(V)3', color='black', width=3, type='l')
 
-    po.lay_set(gp,lay3,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title = ['Vout'],x_to=10,y_to=90,y_step=15))
-
-    po.plot_set(wks, lay4, colx='Time(ns)4', coly='Voltage(V)4', color='black', width=3, type='l')
-
-    po.lay_set(gp,lay4,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title = ['Vout'],x_to=10,y_to=90,y_step=15))
+    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title = ['0.7ns','1ns','2ns','3ns'],x_to=10,y_from=-10,y_to=100,y_step=20))
     
     #------------------------参数设置------------------------
 
@@ -146,7 +139,7 @@ def fig5(input_file1,input_file2,input_file3,input_file4,output_file):
     po.plot_set(wks3, lay1, colx='Time(ns)', coly='20V', color='blue', width=3, type='l')
     po.plot_set(wks4, lay1, colx='Time(ns)', coly='30V', color='#F08228', width=3, type='l')
 
-    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
+    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_from=-10,y_to=100,y_step=20))
 
     print("绘图完成")
     
@@ -207,7 +200,7 @@ def fig6a(input_file1,input_file2,input_file3,output_file):
     po.plot_set(wks2, lay1, colx='Time(ns)', coly='Old simulation', color='red', width=3, type='l')
     po.plot_set(wks3, lay1, colx='Time(ns)', coly='New simulation', color='blue', width=3, type='l')
 
-    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
+    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title=['Measurement','Previous Model','Improved Model'], x_from= -1, x_to=10,y_from=-10,y_to=100,y_step=20))
 
     print("绘图完成")
 
@@ -268,7 +261,7 @@ def fig6b(input_file1,input_file2,input_file3,output_file):
     po.plot_set(wks2, lay1, colx='Time(ns)', coly='Old simulation', color='red', width=3, type='l')
     po.plot_set(wks3, lay1, colx='Time(ns)', coly='New simulation', color='blue', width=3, type='l')
 
-    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
+    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title=['Measurement','Previous Model','Improved Model'],x_from= -1,x_to=10,y_from=-10,y_to=100,y_step=20))
 
     print("绘图完成")
 
@@ -329,7 +322,7 @@ def fig6c(input_file1,input_file2,input_file3,output_file):
     po.plot_set(wks2, lay1, colx='Time(ns)', coly='Old simulation', color='red', width=3, type='l')
     po.plot_set(wks3, lay1, colx='Time(ns)', coly='New simulation', color='blue', width=3, type='l')
 
-    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',x_to=10,y_to=90,y_step=15))
+    po.lay_set(gp,lay1,po.LayConfig(x_title='Time/ns',y_title='Vout/V',legend_title=['Measurement','Previous Model','Improved Model'],x_from= -1,x_to=10,y_from=-10,y_to=100,y_step=20))
 
     print("绘图完成")
 
@@ -474,7 +467,7 @@ def fig7c(input_file1,input_file2,output_file):
     po.plot_set(wks1, lay1, colx='TLP', coly='Simulation', color='red', width=3, type='l')
     
 
-    po.lay_set(gp,lay1,po.LayConfig(x_title='TLP/V',y_title='Vpeak/V',x_to=525,y_to=105,y_step=15,x_step=105))
+    po.lay_set(gp,lay1,po.LayConfig(x_title='TLP/V',y_title='Vpeak/V',x_to=600,x_step=100,y_from=-10,y_to=120,y_step=20))
 
     print("绘图完成")
     

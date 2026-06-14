@@ -65,6 +65,7 @@ class LayConfig:
             x_color            = 'black',              # X标题颜色
             y_color            = 'black',              # Y标题颜色
             legend_color       = 'black',              # 图例标题颜色
+            legend_background  = 0,                    # 图例方框 0 = no background, 1 = black line, 2 = shadow, 3 = dark marble, 4 = white out, and 5 = black out.
             x_bold             = 1,                    # X轴标题字体是否加粗（1=加粗，0=不加粗）
             y_bold             = 1,                    # Y轴标题字体是否加粗（1=加粗，0=不加粗）
             legend_bold        = 1,                    # 图例标题字体是否加粗（1=加粗，0=不加粗）
@@ -105,6 +106,8 @@ class LayConfig:
         self.x_bold = x_bold
         self.y_bold = y_bold
         self.legend_bold = legend_bold
+
+        self.legend_background = legend_background
 
         self.x_font_size = x_font_size
         self.y_font_size = y_font_size
@@ -156,7 +159,7 @@ class LayConfig:
 
         text_parts = []
         for n in range(count):
-            text_parts.append(f"\\l({n+1})\\b({self.legend_title[n]})")
+            text_parts.append(f"\\l({n+1}) \\b({self.legend_title[n]})")
 
         full_text = "\n".join(text_parts)
         op.lt_exec(f'legend.text$="{full_text}"')
@@ -168,7 +171,7 @@ class LayConfig:
         count = op.lt_int('count')  # 获取当前图层有多少条数据
         text_parts = []
         for n in range(count):
-            text_parts.append(f"\\l({n+1})\\b(%({n+1}))")
+            text_parts.append(f"\\l({n+1}) \\b(%({n+1}))")
 
         full_text = "\n".join(text_parts)
         op.lt_exec(f'legend.text$="{full_text}"')
@@ -181,7 +184,7 @@ class LayConfig:
 
         text_parts = []
         for n in range(count):
-            text_parts.append(f"\\l({n+1}){self.legend_title[n]}")
+            text_parts.append(f"\\l({n+1}) {self.legend_title[n]}")
 
         full_text = "\n".join(text_parts)
         op.lt_exec(f'legend.text$="{full_text}"')
@@ -274,6 +277,7 @@ def lay_set(Graph:op.GPage,lay:op.GLayer, config:LayConfig):
     lay.label('legend').set_int('font', config.legend_font)
     lay.label('legend').set_int('fsize', config.legend_font_size)
     lay.label('legend').set_int('color',config.legend_color)
+    lay.label('legend').set_int('background',config.legend_background)
 
     # 坐标轴线厚度
     lay.set_float('x.thickness', config.x_axis_thickness)
