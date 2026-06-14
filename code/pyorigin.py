@@ -88,6 +88,7 @@ class LayConfig:
             y_from             = None,                 # Y轴起始值（None表示自动计算）
             y_to               = None,                 # Y轴结束值（None表示自动计算）
             y_step             = None,                 # y轴step（None表示自动计算）
+            frame              = 1,                    # 图层框架（1=显示，0=不显示）
             aa                 = 1                     # 抗锯齿功能（1=开启，0=关闭）
             ):
         
@@ -137,6 +138,7 @@ class LayConfig:
         self.y_step = y_step
 
         self.aa = aa
+        self.frame = frame
 
     def get_status(self):
 
@@ -299,6 +301,8 @@ def lay_set(Graph:op.GPage,lay:op.GLayer, config:LayConfig):
 
     # 抗锯齿
     Graph.set_int('aa',config.aa)
+
+    lay.set_int('SHOWFRAME',config.frame)
 
     # 自动设置坐标轴的范围
     lay.rescale()
