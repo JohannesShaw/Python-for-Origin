@@ -50,23 +50,21 @@ def fig4(input_file1,input_file2,input_file3,input_file4,output_file):
 
     }))
 
-
-    gp = op.new_graph()                
-    lay1 = gp[0]                      
-
+    gp = po.create_graph()              
+    lay = gp[0]                      
 
     #------------------------参数设置------------------------
 
-    po.plot_set(wks, lay1, colx='Time(ns)4', coly='Voltage(V)4', color="black", width=3, type='l')
+    po.plot_set(wks, lay, colx='Time(ns)4', coly='Voltage(V)4', color="black", width=3, type='l')
 
-    po.plot_set(wks, lay1, colx='Time(ns)1', coly='Voltage(V)1', color='red', width=3, type='l')
+    po.plot_set(wks, lay, colx='Time(ns)1', coly='Voltage(V)1', color='red', width=3, type='l')
 
-    po.plot_set(wks, lay1, colx='Time(ns)2', coly='Voltage(V)2', color='blue', width=3, type='l')
+    po.plot_set(wks, lay, colx='Time(ns)2', coly='Voltage(V)2', color='blue', width=3, type='l')
 
-    po.plot_set(wks, lay1, colx='Time(ns)3', coly='Voltage(V)3', color="#EB7114", width=3, type='l')
+    po.plot_set(wks, lay, colx='Time(ns)3', coly='Voltage(V)3', color="#EB7114", width=3, type='l')
 
-    
-    po.lay_set(gp,lay1,po.LayConfig())
+
+    po.lay_set(gp, lay, po.LayConfig())
     #------------------------参数设置------------------------
     print("绘图完成")
 
@@ -128,15 +126,15 @@ def fig5(input_file1,input_file2,input_file3,input_file4,output_file):
         '30V': df4['vout'],    
     }))
 
-    gp = op.new_graph()                # 新建一个图(该图默认只有一个图层)
-    lay1 = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
+    gp = po.create_graph()                # 新建一个图(该图默认只有一个图层)
+    lay = gp[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
 
-    po.plot_set(wks1, lay1, colx='Time(ns)', coly='5V', color='black', width=3, type='l')
-    po.plot_set(wks2, lay1, colx='Time(ns)', coly='10V', color='red', width=3, type='l')
-    po.plot_set(wks3, lay1, colx='Time(ns)', coly='20V', color='blue', width=3, type='l')
-    po.plot_set(wks4, lay1, colx='Time(ns)', coly='30V', color='#F08228', width=3, type='l')
+    po.plot_set(wks1, lay, colx='Time(ns)', coly='5V', color='black', width=3, type='l')
+    po.plot_set(wks2, lay, colx='Time(ns)', coly='10V', color='red', width=3, type='l')
+    po.plot_set(wks3, lay, colx='Time(ns)', coly='20V', color='blue', width=3, type='l')
+    po.plot_set(wks4, lay, colx='Time(ns)', coly='30V', color='#F08228', width=3, type='l')
 
-    po.lay_set(gp,lay1,po.LayConfig())
+    po.lay_set(gp,lay,po.LayConfig())
 
     print("绘图完成")
     

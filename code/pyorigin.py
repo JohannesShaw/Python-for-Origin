@@ -23,7 +23,7 @@ class AxisConfig:
     title_color: str | tuple[int,int,int]   = 'black'           # 标题颜色，支持颜色名称字符串或RGB元组,例如title_color=(123,23,23)
     title_bold: int                         = 1                 # 标题是否加粗，1为加粗，0为不加粗
     title_italic:int                        = 0                 # 标题是否斜体，1为斜体，0为不斜体
-    title_underline:int                     = 1                 # 标题是否加下划线，1为加，0为不加
+    title_underline:int                     = 0                 # 标题是否加下划线，1为加，0为不加
     title_font_size: int                    = 36                # 标题字体大小（磅值）
 
     # ========== 坐标轴刻度数字相关设置 ==========
@@ -295,11 +295,16 @@ def graph_save(
 # 备份原生方法，防止被污染
 _original_new_graph = op.new_graph
 
+"""
+创建图形对象。
+参数说明：
+template:绘图模板
+调用示例:gp = po.create_graph(template='my_template.otpu') 调用自己的模板需要加后缀,默认调用my_template文件夹里的模板
+        gp = po.create_graph(template='PAN2VERT') 调用系统自带的模板不需要加.otpu后缀
+完美兼容 op.new_graph 的所有原生参数，并将 template 状态绑定到对象自身。
+"""
 def create_graph(*args, **kwargs) -> op.GPage:
-    """
-    创建图形对象。
-    完美兼容 op.new_graph 的所有原生参数，并将 template 状态绑定到对象自身。
-    """
+
     # 1. 动态拦截并处理 template 参数
     # 使用 pop 取出，避免后续重复传递；如果没传则默认为空字符串
     template = kwargs.pop('template', '') 
