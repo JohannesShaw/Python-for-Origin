@@ -33,7 +33,7 @@ def template(input_file,output_file):
     }))
 
 
-    gp1 = op.new_graph()                # 新建一个图(该图默认只有一个图层)
+    gp1 = po.create_graph()                # 新建一个图(该图默认只有一个图层)
     lay1 = gp1[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
 
 #------------------------参数设置------------------------
@@ -80,7 +80,7 @@ def plot_time_x(input_file, output_file1, output_file2):
         'Current(A)': df['Iout(A)']
     }))
 
-    gp1 = op.new_graph()
+    gp1 = po.create_graph()
     lay1 = gp1[0]
 #------------------------参数设置------------------------
 
@@ -89,7 +89,7 @@ def plot_time_x(input_file, output_file1, output_file2):
     po.lay_set(gp1,lay1,po.LayConfig())
 
     # 图2
-    gp2 = op.new_graph()
+    gp2 = po.create_graph()
     lay2 = gp2[0]
 
     po.plot_set(wks, lay2, colx='Time(ns)', coly='Current(A)', color='black', width=3, type='l')
@@ -134,7 +134,7 @@ def plot_two_lines(input_file,input_file1,output_file):
         'Voltage(V)1': df1['Vout(V)']
     }))
 
-    gp1 = op.new_graph()
+    gp1 = po.create_graph()
     lay1 = gp1[0]
 
 #------------------------参数设置------------------------
@@ -185,7 +185,7 @@ def plot_two_in_graph(input_file,output_file):
     # gp = op.new_graph(template='PAN2VERT') 使用内置的不用加 .otpu 
     # 使用自己的模板要加 .otpu ,路径已经写好,这里只需要写模板名字即可，如下所示
     # gp = op.new_graph(template='example.otpu')
-    gp = op.new_graph(template='PAN2VERT')
+    gp = po.create_graph(template='PAN2VERT')
     
     lay1 = gp[0]
     lay2 = gp[1]
