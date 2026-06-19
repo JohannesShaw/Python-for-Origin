@@ -33,6 +33,7 @@ class AxisConfig:
     axis_font: str                          = 'Times New Roman' # 刻度数字的字体名称
     axis_color: str | tuple[int,int,int]    = 'black'           # 坐标轴及刻度数字颜色，支持颜色名称或RGB元组
     axis_ticks: str                         = 'inner'           # 刻度朝向，'inner'朝内，'outer'朝外
+    axis_show:int                           = 3                 #  0不显示,1显示左下前,2显示右上后,3都显示
 
     # ========== 坐标轴范围设置 ==========
     begin: float | None                     = None              # 坐标轴起始值，None表示自动
@@ -58,13 +59,11 @@ class AxisConfig:
         self._axis_color_id  = op.lt_int(f'color({self.axis_color})')
         self._axis_ticks_id  = self._FONT.get(self.axis_ticks, 5)
 
-
-    # axis: X is the bottom X axis, X2 is the top X axis, Y is the left Y axis, Y2 is the right Y axis, Z is the front Z axis, Z2 is the back Z axis, Zh is the ZhX axis, Zh2 is the back ZhY axis, and Zh3 is the back ZhZ axis.
+    # axis:所有的参数
+    # X:底部, X2:顶部, Y:左边, Y2:右边, Z:前面, Z2:后面
+    # Zh is the ZhX axis, Zh2 is the back ZhY axis, and Zh3 is the back ZhZ axis.
     def axis_set(self,axis:str,lay:op.GLayer):
         
-        # 坐标轴标题
-        lay.axis(axis).title = self.title
-
         # 坐标轴厚度
         lay.set_float(f'{axis}.thickness', self.axis_thickness)
         
@@ -79,17 +78,17 @@ class AxisConfig:
     
         # 刻度朝向
         lay.set_int(f'{axis}.ticks', self._axis_ticks_id)
-    
-        # 自动设置坐标轴的范围
-        lay.rescale()
 
+        lay.set_int(f'{axis}.showAxes',self.axis_show)
+    
         # 手动设置坐标轴范围
         lay.axis(axis).set_limits(self.begin, self.end, self.step)
 
-    # text:xb,yl,xt,yr
+    # text:xb,yl,xt,yr,zb,zf
     def title_set(self,text:str,lay:op.GLayer):
 
         label = lay.label(text)
+        label.set_str('text',self.title)
         label.set_int('font', self._title_font_id)
         label.set_int('fsize', self.title_font_size)
         label.set_int('color', self._title_color_id)
@@ -236,12 +235,17 @@ class LayConfig:
 def lay_set(Graph: op.GPage, lay: op.GLayer, config: LayConfig):
 
     lay.activate()
+
+    # 自动设置坐标轴的范围
+    lay.rescale()
     
     config.x.axis_set('x',lay)
-    config.x.title_set('xb',lay)
     config.y.axis_set('y',lay)
-    config.y.title_set('yl',lay)
+    config.y.axis_set('x2',lay)
+    config.y.axis_set('y2',lay)
 
+    config.x.title_set('xb',lay)
+    config.y.title_set('yl',lay)
 
     config.legend.text_set('legend',lay)
 
