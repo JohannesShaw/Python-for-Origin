@@ -83,7 +83,7 @@ def fig4(input_file1,input_file2,input_file3,input_file4,input_file5,input_file6
     po.lay_set(gp, lay, po.LayConfig(
         x = po.AxisConfig(title='Time/ns',begin=-0.5,end=6,step=2),
         y = po.AxisConfig(title='Voltage/V'),
-        legend=po.TextConfig(title=['0.2ns','0.3ns','0.6ns','1.0ns','2.0ns','3.0ns'])
+        legend=po.TextConfig(title=['0.2ns','1','2','3','4','5'])
     ))
 
     #------------------------参数设置------------------------

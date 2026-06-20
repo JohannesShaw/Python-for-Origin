@@ -1,11 +1,6 @@
 import plot
 import data_deal as dd
 
-# dd.clean('0.1.csv','c0.1ns.csv')
-# dd.clean('0.2.csv','c0.2ns.csv')
-# dd.clean('0.6.csv','c0.6ns.csv')
-# dd.clean('0.8.csv','c0.8ns.csv')
-# dd.clean('1.2.csv','c1.2ns.csv')
 
 # plot.fig4(
 #     r'D:\VsCode File\Python Code\data_analysis\data\fig4\c1.0ns.csv',

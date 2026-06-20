@@ -11,7 +11,7 @@ import originpro as op
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import ClassVar
-
+import re
 
 """坐标轴类"""
 @dataclass
@@ -79,6 +79,7 @@ class AxisConfig:
         # 刻度朝向
         lay.set_int(f'{axis}.ticks', self._axis_ticks_id)
 
+        # 刻度显示
         lay.set_int(f'{axis}.showAxes',self.axis_show)
     
         # 手动设置坐标轴范围
@@ -100,22 +101,22 @@ class AxisConfig:
     # 加粗设置
     def _bold_set(self,text):
 
-        name = op.get_lt_str(f'{text}.text$')
         if self.title_bold:
+            name = op.get_lt_str(f'{text}.text$')
             op.lt_exec(f'{text}.text$="\\b({name})"')
 
     # 斜体设置
     def _italic_set(self,text):
 
-        name = op.get_lt_str(f'{text}.text$')
         if self.title_italic:
+            name = op.get_lt_str(f'{text}.text$')
             op.lt_exec(f'{text}.text$="\\i({name})"')
 
     # 下划线设置
     def _underline_set(self,text):
 
-        name = op.get_lt_str(f'{text}.text$')
         if self.title_underline:
+            name = op.get_lt_str(f'{text}.text$')
             op.lt_exec(f'{text}.text$="\\u({name})"')
 
 
@@ -126,6 +127,8 @@ class TextConfig:
     font: str                           = 'Times New Roman' # 图例文本字体名称
     color: str | tuple[int, int, int]   = 'black'           # 图例文本颜色，支持颜色名称或RGB元组,如color = (0,231,123)
     bold: int                           = 1                 # 图例文本是否加粗，1为加粗，0为不加粗
+    italic:int                          = 0                 # 图例文本是否斜体，1为斜体，0不为斜体
+    underline:int                       = 0                 # 图例文本是否加下划线，1加下划线，0不加下划线
     font_size: int                      = 26                # 图例文本字体大小（磅值）
     background: int                     = 0                 # 图例背景透明度，0为透明背景，其他值为不同背景样式
     
@@ -133,19 +136,6 @@ class TextConfig:
     _font_id: int = field(init=False, repr=False)       # 字体在Origin中的内部ID
     _color_id: int = field(init=False, repr=False)      # 颜色在Origin中的内部ID
     
-
-    # ========== 策略映射表：根据 (是否有标题, 是否加粗) 的组合选择对应的格式化方法 ==========
-    # (True, True)  -> 有标题且加粗：使用 \l() \b() 格式
-    # (True, False) -> 有标题不加粗：使用 \l() 格式
-    # (False, True) -> 无标题但加粗：使用 \l() \b(%()) 格式（用数据源名称）
-    # (False, False)-> 无标题不加粗：返回None，不修改默认图例
-    _strategy_map: ClassVar[dict] = {
-        (True, True):  '_fmt_title_bold',
-        (True, False): '_fmt_title_no',
-        (False, True): '_fmt_no_bold',
-        (False, False): '_fmt_default',
-    }
-
     def __post_init__(self):
         self._font_id = op.lt_int(f'font({self.font})')
         self._color_id = op.lt_int(f'color({self.color})')
@@ -154,64 +144,58 @@ class TextConfig:
         if isinstance(self.title, str):
             self.title = [self.title]
 
-    def text_set(self, text: str, lay: op.GLayer):
+    def text_set(self,text:str,lay:op.GLayer):
 
         label = lay.label(text)
+    
+        label.set_str('text',self.__legend_format_set())
         label.set_int('font', self._font_id)
         label.set_int('fsize', self.font_size)
         label.set_int('color', self._color_id)
         label.set_int('background', self.background)
-        self._execute(text)
-
-    # ================= 核心执行引擎 (模板方法) =================
-
-    def _execute(self,text:str):
         
-        key = (bool(self.title), bool(self.bold))
-        
-        strategy_name = self._strategy_map.get(key, '_fmt_default')
-        formatter = getattr(self, strategy_name)
-        
-        # 获取格式化后的文本
-        full_text = formatter()
-        
-        # 如果策略返回 None (如 default 状态)，则跳过执行
-        if full_text is None:
-            return
+    def __legend_format_set(self) -> str:
 
-        op.lt_exec(f'{text}.text$="{full_text}"')
+        # op.lt_exec('layer -c;')
+        # count = op.lt_int('count')
+        contend = op.get_lt_str(f'legend.text$')
 
-
-    def _get_safe_title(self, index: int) -> str:
+        results = []
     
-        if self.title and index < len(self.title):
-            return self.title[index]
-        return f"Data {index + 1}" # 越界时的安全降级默认值
+        # 优化：先过滤掉空行，确保行索引(i)与列表的索引严格对应
+        lines = [line.strip() for line in contend.strip().splitlines() if line.strip()]
 
-    def _fmt_title_bold(self) -> str:
-       
-        op.lt_exec('layer -c;')
-        count = op.lt_int('count')
-        parts = [f"\\l({n+1}) \\b({self._get_safe_title(n)})" for n in range(count)]
-        return "\n".join(parts)
-
-    def _fmt_title_no(self) -> str:
+        for i, line in enumerate(lines):
+            # ========== 第一步：提取与分离 ==========
+            # 1. 提取 \l(序号) 部分
+            l_match = re.search(r'(\\l\(\d+\))', line)
+            l_part = l_match.group(1) if l_match else ''
         
-        op.lt_exec('layer -c;')
-        count = op.lt_int('count')
-        parts = [f"\\l({n+1}) {self._get_safe_title(n)}" for n in range(count)]
-        return "\n".join(parts)
+            # 2. 提取纯数据内容
+            rest = line.split(')', 1)[-1] if ')' in line else line
+            extracted_data = rest.replace('%','').replace('(', '').replace(')', '').strip()
 
-    def _fmt_no_bold(self) -> str:
-        
-        op.lt_exec('layer -c;')
-        count = op.lt_int('count')
-        parts = [f"\\l({n+1}) \\b(%({n+1}))" for n in range(count)]
-        return "\n".join(parts)
+            # 判断是否使用列表中的指定数据覆盖
+            if self.title is not None and i < len(self.title):
+                data = str(self.title[i]).strip()
+            else:
+                data = f'\\%({extracted_data})' # 使用原标题
+            
+            # ========== 带格式符的拼接 ==========
+            if self.bold:
+                data_part = f'\\b({data})'
+            else:
+                data_part = f'{data}'
 
-    def _fmt_default(self) -> str | None:
+            if self.italic:
+                data_part = f'\\i({data_part})'
+            
+            if self.underline:
+                data_part = f'\\u({data_part})'
+            
+            results.append(f'{l_part} {data_part}')
         
-        return None
+        return '\n'.join(results)
 
 class LayConfig:
     
