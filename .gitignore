@@ -3,5 +3,7 @@ __pycache__/
 
 image/*.png
 project/*.opju
+data/*.csv
 
-my_data_deal.py
+code/data_deal.py
+code/plot.py
