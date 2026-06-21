@@ -226,7 +226,8 @@ class LegendSettingsWidget(QWidget):
         legend_group = QGroupBox("图例 (Legend) 设置")
         legend_form = QFormLayout()
         self.legend_title = QLineEdit("")
-        self.legend_title.setPlaceholderText("留空则使用默认列名，多个图例用逗号分隔")
+        # 修改占位符提示
+        self.legend_title.setPlaceholderText("留空则使用Y轴列名作为默认图例，多个图例用逗号分隔")
         self.legend_font = QComboBox()
         self.legend_font.addItems(['Times New Roman', 'Arial', 'Courier New', 'Helvetica'])
         self.legend_color_btn = QPushButton("选择颜色")
@@ -408,6 +409,11 @@ class MainWindow(QMainWindow):
         data_form = QFormLayout()
         self.combo_x = QComboBox()
         self.combo_y = QComboBox()
+        
+        # 绑定下拉框改变信号，用于自动更新默认标题和图例
+        self.combo_x.currentTextChanged.connect(self.on_column_changed)
+        self.combo_y.currentTextChanged.connect(self.on_column_changed)
+        
         self.line_color_btn = QPushButton("选择颜色")
         self.line_color_btn.clicked.connect(self.choose_line_color)
         self.line_color = (0, 0, 0)
@@ -497,9 +503,28 @@ class MainWindow(QMainWindow):
             if len(self.df_columns) >= 2:
                 self.combo_y.setCurrentIndex(1)
                 
+            # 文件加载完毕后，主动触发一次默认值更新
+            self.on_column_changed()
             self.log(f"成功加载文件，识别到 {len(self.df_columns)} 列数据。")
         except Exception as e:
             QMessageBox.critical(self, "读取错误", f"无法读取文件列名:\n{str(e)}")
+
+    def on_column_changed(self):
+        """当选择的X或Y列改变时，自动更新默认的轴标题和图例名称"""
+        x_col = self.combo_x.currentText()
+        y_col = self.combo_y.currentText()
+        
+        # 1. 给x轴标题的默认值为用于x轴绘图的表头
+        if x_col:
+            self.x_settings.title_edit.setText(x_col)
+            
+        # 2. 给y轴标题的默认值为用于y轴绘图的表头
+        if y_col:
+            self.y_settings.title_edit.setText(y_col)
+            
+        # 3. 图例的默认名字为y的表头
+        if y_col:
+            self.legend_settings.legend_title.setText(y_col)
 
     def choose_line_color(self):
         color = QColorDialog.getColor(QColor(*self.line_color), self, "选择曲线颜色")
