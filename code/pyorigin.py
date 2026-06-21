@@ -52,11 +52,17 @@ class AxisConfig:
 
 
     def __post_init__(self):
+        
         self._title_font_id  = op.lt_int(f'font({self.title_font})')
-        self._title_color_id = op.lt_int(f'color({self.title_color})')
+
+        safe_title_color = _parse_origin_color(self.title_color)
+        self._title_color_id = op.lt_int(f'color({safe_title_color})')
 
         self._axis_font_id   = op.lt_int(f'font({self.axis_font})')
-        self._axis_color_id  = op.lt_int(f'color({self.axis_color})')
+
+        safe_axis_color = _parse_origin_color(self.axis_color)
+        self._axis_color_id  = op.lt_int(f'color({safe_axis_color})')
+
         self._axis_ticks_id  = self._FONT.get(self.axis_ticks, 5)
 
     # axis:所有的参数
@@ -82,6 +88,9 @@ class AxisConfig:
         # 刻度显示
         lay.set_int(f'{axis}.showAxes',self.axis_show)
     
+        # 设置颜色
+        lay.set_int(f'{axis}.color',self._axis_color_id)
+        
         # 手动设置坐标轴范围
         lay.axis(axis).set_limits(self.begin, self.end, self.step)
 
@@ -138,7 +147,9 @@ class TextConfig:
     
     def __post_init__(self):
         self._font_id = op.lt_int(f'font({self.font})')
-        self._color_id = op.lt_int(f'color({self.color})')
+
+        safe_color = _parse_origin_color(self.color)
+        self._color_id = op.lt_int(f'color({safe_color})')
 
         # 检查self.title是否是字符串类型，如果是，将其转换成列表
         if isinstance(self.title, str):
@@ -153,7 +164,8 @@ class TextConfig:
         label.set_int('fsize', self.font_size)
         label.set_int('color', self._color_id)
         label.set_int('background', self.background)
-        
+
+    
     def __legend_format_set(self) -> str:
 
         # op.lt_exec('layer -c;')
@@ -197,22 +209,22 @@ class TextConfig:
         
         return '\n'.join(results)
 
+@dataclass
 class LayConfig:
-    
-    def __init__(
-        self,
-        x: AxisConfig        = None,    # X轴配置对象，为None时使用默认配置（标题为'x'）
-        y: AxisConfig        = None,    # Y轴配置对象，为None时使用默认配置（标题为'y'）
-        legend: TextConfig   = None,    # 图例配置对象，为None时使用默认配置
-        frame: int           = 1,       # 是否显示图层边框，1为显示，0为不显示
-        aa: int              = 1,       # 是否开启抗锯齿，1为开启，0为关闭
-    ):
-        self.x          = x or AxisConfig(title='x')    # 实际使用的X轴配置实例
-        self.y          = y or AxisConfig(title='y')    # 实际使用的Y轴配置实例
-        self.legend     = legend or TextConfig()        # 实际使用的图例配置实例
-        
-        self.frame      = frame                         # 图层边框显示状态
-        self.aa         = aa                            # 抗锯齿开关状态
+   
+    x: AxisConfig | None            = None
+    y: AxisConfig | None            = None
+    legend: TextConfig | None       = None
+    frame: int                      = 1
+    aa: int                         = 1
+
+    def __post_init__(self):
+        if self.x is None:
+            self.x = AxisConfig(title='x')
+        if self.y is None:
+            self.y = AxisConfig(title='y')
+        if self.legend is None:
+            self.legend = TextConfig()
 
 
 # 函数功能说明：配置一个图层的参数
@@ -225,7 +237,7 @@ def lay_set(Graph: op.GPage, lay: op.GLayer, config: LayConfig):
     
     config.x.axis_set('x',lay)
     config.y.axis_set('y',lay)
-    config.y.axis_set('x2',lay)
+    config.x.axis_set('x2',lay)
     config.y.axis_set('y2',lay)
 
     config.x.title_set('xb',lay)
@@ -254,6 +266,28 @@ def plot_set(
     plot.set_float('line.width', width)  # 设置线宽
     plot.color = color
 
+def _parse_origin_color(color_input):
+    """
+    将多种颜色输入格式统一转换为 Origin LabTalk 支持的十六进制字符串
+    支持: RGB元组 (255,0,0), 颜色名称 'red', 十六进制 '#FF0000'
+    """
+    # 如果已经是合法的十六进制字符串，直接返回
+    if isinstance(color_input, str):
+        if color_input.startswith('#') and len(color_input) == 7:
+            return color_input
+        # 如果是颜色名称如 'red', 'blue'，Origin原生支持，直接返回
+        return color_input
+    
+    # 如果是 RGB 元组或列表，转换为十六进制
+    if isinstance(color_input, (tuple, list)) and len(color_input) == 3:
+        try:
+            r, g, b = [int(c) for c in color_input]
+            return f"#{r:02x}{g:02x}{b:02x}"
+        except (ValueError, TypeError):
+            pass
+            
+    # 兜底默认黑色
+    return "#000000"
 
 # 函数功能说明：保存图像,目前支持.png格式
 def graph_save(
