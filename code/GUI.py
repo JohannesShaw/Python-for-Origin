@@ -2,7 +2,6 @@
 这个文件用于绘制交互界面
 """
 import sys
-import os
 import pandas as pd
 from pathlib import Path
 
@@ -19,10 +18,6 @@ from PySide6.QtGui import QDragEnterEvent, QDropEvent, QColor
 try:
     import pyorigin as po
     import originpro as op
-    try:
-        import data_deal as dd
-    except ImportError:
-        pass
     ORIGIN_AVAILABLE = True
 except ImportError:
     ORIGIN_AVAILABLE = False
