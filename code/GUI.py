@@ -1,5 +1,5 @@
 """
-这个文件用于绘制交互界面
+这个文件用于绘制交互界面 (支持多数据线绘制优化版 - 修复图例联动Bug)
 """
 import sys
 import pandas as pd
@@ -9,7 +9,8 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QPushButton, QLabel, QLineEdit, QFileDialog, QTextEdit,
     QGroupBox, QFormLayout, QSpinBox, QDoubleSpinBox, QComboBox,
-    QCheckBox, QColorDialog, QMessageBox, QTabWidget, QSplitter
+    QCheckBox, QColorDialog, QMessageBox, QTabWidget, QSplitter,
+    QScrollArea, QFrame
 )
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QDragEnterEvent, QDropEvent, QColor
@@ -82,6 +83,78 @@ class DropArea(QLabel):
         self.file_dropped.emit(file_path)
 
 
+class CurveItemWidget(QWidget):
+    """单条曲线配置组件 (Y列、颜色、线宽、类型、删除)"""
+    removed = Signal(object)
+    changed = Signal()
+
+    def __init__(self, columns, index, parent=None):
+        super().__init__(parent)
+        self.index = index
+        
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 5, 0, 5)
+        self.setLayout(layout)
+        
+        # Y列选择
+        self.combo_y = QComboBox()
+        self.combo_y.addItems(columns)
+        self.combo_y.setMinimumWidth(100)
+        # 【修复Bug】：使用 lambda 忽略 currentTextChanged 传递的字符串参数，确保信号正常触发
+        self.combo_y.currentTextChanged.connect(lambda _: self.changed.emit())
+        
+        # 颜色选择 (默认黑色，由用户手动选择)
+        self.line_color = (0, 0, 0)
+        self.line_color_btn = QPushButton("选择颜色")
+        self.line_color_btn.setFixedWidth(80)
+        self.line_color_btn.clicked.connect(self.choose_color)
+        
+        # 线宽
+        self.line_width = QDoubleSpinBox()
+        self.line_width.setRange(0.1, 10.0)
+        self.line_width.setValue(3.0)
+        self.line_width.setFixedWidth(60)
+        
+        # 图表类型
+        self.line_type = QComboBox()
+        self.line_type.addItems([ 
+            'l (折线图)', 
+            's (散点图)', 
+            'y (点线图)', 
+            'c (柱状图)'
+        ])
+        self.line_type.setFixedWidth(90)
+        
+        # 删除按钮
+        self.btn_remove = QPushButton("✕")
+        self.btn_remove.setFixedSize(25, 25)
+        self.btn_remove.setStyleSheet("color: red; font-weight: bold; border: none;")
+        self.btn_remove.clicked.connect(lambda: self.removed.emit(self))
+        
+        # 组装布局
+        layout.addWidget(QLabel(f"线{index + 1} Y列:"))
+        layout.addWidget(self.combo_y)
+        layout.addWidget(self.line_color_btn)
+        layout.addWidget(self.line_width)
+        layout.addWidget(self.line_type)
+        layout.addWidget(self.btn_remove)
+        layout.addStretch()
+
+    def choose_color(self):
+        color = QColorDialog.getColor(QColor(*self.line_color), self, "选择曲线颜色")
+        if color.isValid():
+            self.line_color = (color.red(), color.green(), color.blue())
+            self.line_color_btn.setStyleSheet(f"background-color: {color.name()}; color: white;")
+
+    def get_config(self):
+        return {
+            'col_y': self.combo_y.currentText(),
+            'color': self.line_color,
+            'width': self.line_width.value(),
+            'type': self.line_type.currentText().split(' ')[0]
+        }
+
+
 class AxisSettingsWidget(QWidget):
     """坐标轴参数设置组件 (对应 pyorigin.py 中的 AxisConfig)"""
     def __init__(self, title="Axis"):
@@ -96,7 +169,7 @@ class AxisSettingsWidget(QWidget):
         self.title_font.addItems(['Times New Roman', 'Arial', 'Courier New', 'Helvetica'])
         self.title_color_btn = QPushButton("选择颜色")
         self.title_color_btn.clicked.connect(self.choose_title_color)
-        self.title_color = (0, 0, 0) # 默认黑色
+        self.title_color = (0, 0, 0) 
         
         self.title_bold = QCheckBox("加粗")
         self.title_bold.setChecked(True)
@@ -182,7 +255,6 @@ class AxisSettingsWidget(QWidget):
             self.axis_color_btn.setStyleSheet(f"background-color: {color.name()}; color: white;")
 
     def get_config_params(self):
-        """收集UI参数，返回用于实例化 AxisConfig 的字典"""
         def parse_float(text):
             try:
                 return float(text) if text.strip() else None
@@ -212,17 +284,15 @@ class AxisSettingsWidget(QWidget):
 
 
 class LegendSettingsWidget(QWidget):
-    """图例与图层设置组件 (对应 pyorigin.py 中的 TextConfig 和 LayConfig)"""
+    """图例与图层设置组件"""
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
 
-        # 图例设置
         legend_group = QGroupBox("图例 (Legend) 设置")
         legend_form = QFormLayout()
         self.legend_title = QLineEdit("")
-        # 修改占位符提示
-        self.legend_title.setPlaceholderText("留空则使用Y轴列名作为默认图例，多个图例用逗号分隔")
+        self.legend_title.setPlaceholderText("多曲线图例请用逗号分隔，留空则默认使用Y轴列名")
         self.legend_font = QComboBox()
         self.legend_font.addItems(['Times New Roman', 'Arial', 'Courier New', 'Helvetica'])
         self.legend_color_btn = QPushButton("选择颜色")
@@ -252,7 +322,6 @@ class LegendSettingsWidget(QWidget):
         legend_group.setLayout(legend_form)
         layout.addWidget(legend_group)
 
-        # 图层设置
         layer_group = QGroupBox("图层 (Layer) 设置")
         layer_form = QFormLayout()
         self.frame_check = QCheckBox("显示边框 (Frame)")
@@ -296,16 +365,15 @@ class LegendSettingsWidget(QWidget):
 
 
 class PlotWorker(QThread):
-    """后台绘图线程，防止 Origin 调用阻塞 UI"""
+    """后台绘图线程，支持多曲线绘制"""
     log_signal = Signal(str)
     finished_signal = Signal(bool, str)
 
-    def __init__(self, file_path, col_x, col_y, plot_params, x_params, y_params, legend_params, layer_params, save_params):
+    def __init__(self, file_path, col_x, curves_config, x_params, y_params, legend_params, layer_params, save_params):
         super().__init__()
         self.file_path = file_path
         self.col_x = col_x
-        self.col_y = col_y
-        self.plot_params = plot_params
+        self.curves_config = curves_config  
         self.x_params = x_params
         self.y_params = y_params
         self.legend_params = legend_params
@@ -329,26 +397,28 @@ class PlotWorker(QThread):
             wks = wb.add_sheet()
             
             self.log_signal.emit("正在加载数据到工作表...")
-            wks.from_df(pd.DataFrame({
-                self.col_x: df1[self.col_x],
-                self.col_y: df1[self.col_y],
-            }))
+            cols_to_load = {self.col_x: df1[self.col_x]}
+            for curve in self.curves_config:
+                cols_to_load[curve['col_y']] = df1[curve['col_y']]
+                
+            wks.from_df(pd.DataFrame(cols_to_load))
 
             self.log_signal.emit("正在创建图形并绘制曲线...")
             gp = po.create_graph()
             lay = gp[0]
 
-            po.plot_set(
-                wks, lay, 
-                colx=self.col_x, 
-                coly=self.col_y, 
-                color=self.plot_params['color'], 
-                width=self.plot_params['width'], 
-                type=self.plot_params['type']
-            )
+            for i, curve in enumerate(self.curves_config):
+                self.log_signal.emit(f"  -> 正在绘制第 {i+1} 条曲线 ({curve['col_y']})...")
+                po.plot_set(
+                    wks, lay, 
+                    colx=self.col_x, 
+                    coly=curve['col_y'], 
+                    color=curve['color'], 
+                    width=curve['width'], 
+                    type=curve['type']
+                )
 
             self.log_signal.emit("正在应用坐标轴与图例参数...")
-            # 实例化 Config 类 (必须在 op.set_show 之后)
             x_config = po.AxisConfig(**self.x_params)
             y_config = po.AxisConfig(**self.y_params)
             legend_config = po.TextConfig(**self.legend_params)
@@ -377,16 +447,15 @@ class PlotWorker(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Origin 自动化绘图 GUI")
-        self.resize(1000, 700)
+        self.setWindowTitle("Origin 自动化绘图 GUI (多曲线版)")
+        self.resize(1050, 750)
         self.df_columns = []
+        self.curve_widgets = []
 
-        # 中心部件
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
 
-        # 使用 Splitter 分割左右布局
         splitter = QSplitter(Qt.Horizontal)
         main_layout.addWidget(splitter)
 
@@ -399,39 +468,38 @@ class MainWindow(QMainWindow):
         self.drop_area.file_dropped.connect(self.on_file_loaded)
         left_layout.addWidget(self.drop_area)
 
-        # 2. 数据列与曲线设置
-        data_group = QGroupBox("数据与曲线设置")
-        data_form = QFormLayout()
+        # 2. X轴数据列设置 (全局唯一)
+        x_group = QGroupBox("X 轴数据设置")
+        x_form = QFormLayout()
         self.combo_x = QComboBox()
-        self.combo_y = QComboBox()
-        
-        # 绑定下拉框改变信号，用于自动更新默认标题和图例
-        self.combo_x.currentTextChanged.connect(self.on_column_changed)
-        self.combo_y.currentTextChanged.connect(self.on_column_changed)
-        
-        self.line_color_btn = QPushButton("选择颜色")
-        self.line_color_btn.clicked.connect(self.choose_line_color)
-        self.line_color = (0, 0, 0)
-        self.line_width = QDoubleSpinBox()
-        self.line_width.setRange(0.1, 10.0)
-        self.line_width.setValue(3.0)
-        self.line_type = QComboBox()
-        self.line_type.addItems([ 
-            'l (折线图)', 
-            's (散点图)', 
-            'y (点线图)', 
-            'c (柱状图)'
-            ])
+        # 【修复Bug】：使用 lambda 忽略参数
+        self.combo_x.currentTextChanged.connect(lambda _: self.on_column_changed())
+        x_form.addRow("X 轴数据列:", self.combo_x)
+        x_group.setLayout(x_form)
+        left_layout.addWidget(x_group)
 
-        data_form.addRow("X 轴数据列:", self.combo_x)
-        data_form.addRow("Y 轴数据列:", self.combo_y)
-        data_form.addRow("曲线颜色:", self.line_color_btn)
-        data_form.addRow("曲线线宽:", self.line_width)
-        data_form.addRow("图表类型:", self.line_type)
-        data_group.setLayout(data_form)
-        left_layout.addWidget(data_group)
+        # 3. 多曲线 Y轴数据设置 (动态容器)
+        curves_group = QGroupBox("Y 轴数据与曲线设置 (支持多条)")
+        curves_main_layout = QVBoxLayout()
+        
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setMinimumHeight(150)
+        scroll_widget = QWidget()
+        self.curves_layout = QVBoxLayout(scroll_widget)
+        self.curves_layout.setAlignment(Qt.AlignTop)
+        scroll.setWidget(scroll_widget)
+        curves_main_layout.addWidget(scroll)
+        
+        self.btn_add_curve = QPushButton("+ 添加曲线")
+        self.btn_add_curve.setStyleSheet("color: #2196F3; font-weight: bold; border: 1px dashed #2196F3; padding: 5px;")
+        self.btn_add_curve.clicked.connect(self.add_curve_widget)
+        curves_main_layout.addWidget(self.btn_add_curve)
+        
+        curves_group.setLayout(curves_main_layout)
+        left_layout.addWidget(curves_group)
 
-        # 3. 保存设置
+        # 4. 保存设置
         save_group = QGroupBox("保存设置")
         save_form = QFormLayout()
         self.image_name_edit = QLineEdit("output.png")
@@ -441,7 +509,7 @@ class MainWindow(QMainWindow):
         save_group.setLayout(save_form)
         left_layout.addWidget(save_group)
 
-        # 4. 执行按钮
+        # 5. 执行按钮
         self.btn_plot = QPushButton("🚀 开始绘图")
         self.btn_plot.setStyleSheet("""
             QPushButton {
@@ -471,7 +539,7 @@ class MainWindow(QMainWindow):
 
         splitter.addWidget(left_widget)
         splitter.addWidget(right_widget)
-        splitter.setSizes([350, 650])
+        splitter.setSizes([400, 650])
 
         # ================= 底部日志区 =================
         self.log_area = QTextEdit()
@@ -483,7 +551,6 @@ class MainWindow(QMainWindow):
         self.worker = None
 
     def on_file_loaded(self, file_path):
-        """文件加载后，读取列名填充 ComboBox"""
         try:
             if file_path.endswith('.csv'):
                 df = pd.read_csv(file_path, nrows=0)
@@ -496,41 +563,82 @@ class MainWindow(QMainWindow):
 
             self.df_columns = df.columns.tolist()
             self.combo_x.clear()
-            self.combo_y.clear()
             self.combo_x.addItems(self.df_columns)
-            self.combo_y.addItems(self.df_columns)
             
+            self.clear_curves()
             if len(self.df_columns) >= 2:
-                self.combo_y.setCurrentIndex(1)
+                self.add_curve_widget(default_y_index=1)
+            else:
+                self.add_curve_widget()
                 
-            # 文件加载完毕后，主动触发一次默认值更新
             self.on_column_changed()
             self.log(f"成功加载文件，识别到 {len(self.df_columns)} 列数据。")
         except Exception as e:
             QMessageBox.critical(self, "读取错误", f"无法读取文件列名:\n{str(e)}")
 
-    def on_column_changed(self):
-        """当选择的X或Y列改变时，自动更新默认的轴标题和图例名称"""
-        x_col = self.combo_x.currentText()
-        y_col = self.combo_y.currentText()
-        
-        # 1. 给x轴标题的默认值为用于x轴绘图的表头
-        if x_col:
-            self.x_settings.title_edit.setText(x_col)
-            
-        # 2. 给y轴标题的默认值为用于y轴绘图的表头
-        if y_col:
-            self.y_settings.title_edit.setText(y_col)
-            
-        # 3. 图例的默认名字为y的表头
-        if y_col:
-            self.legend_settings.legend_title.setText(y_col)
+    def clear_curves(self):
+        for w in self.curve_widgets:
+            self.curves_layout.removeWidget(w)
+            w.deleteLater()
+        self.curve_widgets.clear()
 
-    def choose_line_color(self):
-        color = QColorDialog.getColor(QColor(*self.line_color), self, "选择曲线颜色")
-        if color.isValid():
-            self.line_color = (color.red(), color.green(), color.blue())
-            self.line_color_btn.setStyleSheet(f"background-color: {color.name()}; color: white;")
+    def add_curve_widget(self, default_y_index=0):
+        index = len(self.curve_widgets)
+        widget = CurveItemWidget(self.df_columns, index)
+        if self.df_columns and default_y_index < len(self.df_columns):
+            widget.combo_y.setCurrentIndex(default_y_index)
+            
+        widget.removed.connect(self.remove_curve_widget)
+        widget.changed.connect(self.on_column_changed)
+        
+        self.curve_widgets.append(widget)
+        self.curves_layout.addWidget(widget)
+        self.update_remove_buttons_state()
+        self.on_column_changed()
+
+    def remove_curve_widget(self, widget):
+        self.curve_widgets.remove(widget)
+        self.curves_layout.removeWidget(widget)
+        widget.deleteLater()
+        
+        for i, w in enumerate(self.curve_widgets):
+            w.index = i
+            w.layout().itemAt(0).widget().setText(f"线{i + 1} Y列:")
+            
+        self.update_remove_buttons_state()
+        self.on_column_changed()
+
+    def update_remove_buttons_state(self):
+        can_remove = len(self.curve_widgets) > 1
+        for w in self.curve_widgets:
+            w.btn_remove.setEnabled(can_remove)
+            w.btn_remove.setVisible(can_remove)
+
+    def on_column_changed(self):
+        """智能联动更新标题和图例 (带防覆盖机制)"""
+        x_col = self.combo_x.currentText()
+        if x_col:
+            # 只有当X轴标题为空，或者是默认的列名时，才自动更新，防止覆盖用户手写的自定义X轴标题
+            if not self.x_settings.title_edit.text() or self.x_settings.title_edit.text() in self.df_columns:
+                self.x_settings.title_edit.setText(x_col)
+            
+        # 收集所有Y列
+        y_cols = [w.combo_y.currentText() for w in self.curve_widgets if w.combo_y.currentText()]
+        if y_cols:
+            # Y轴标题默认使用第一个Y列 (带防覆盖机制)
+            if not self.y_settings.title_edit.text() or self.y_settings.title_edit.text() in self.df_columns:
+                self.y_settings.title_edit.setText(y_cols[0])
+                
+            # 图例智能联动 (带防覆盖机制)
+            current_legend = self.legend_settings.legend_title.text().strip()
+            current_legend_list = [t.strip() for t in current_legend.split(',')] if current_legend else []
+            
+            # 判断当前图例框里的内容是否全都是“数据列名”（即系统自动生成的）
+            # 如果用户手动输入了非列名的自定义图例（如 "实验组, 对照组"），则不再强制覆盖
+            is_auto_generated = all(item in self.df_columns for item in current_legend_list) if current_legend_list else True
+            
+            if is_auto_generated:
+                self.legend_settings.legend_title.setText(", ".join(y_cols))
 
     def log(self, message):
         self.log_area.append(message)
@@ -540,32 +648,29 @@ class MainWindow(QMainWindow):
         if not self.drop_area.file_path:
             QMessageBox.warning(self, "提示", "请先导入数据文件！")
             return
-        if not self.combo_x.currentText() or not self.combo_y.currentText():
-            QMessageBox.warning(self, "提示", "请选择 X 和 Y 数据列！")
+        if not self.combo_x.currentText():
+            QMessageBox.warning(self, "提示", "请选择 X 数据列！")
+            return
+        if not self.curve_widgets:
+            QMessageBox.warning(self, "提示", "请至少添加一条 Y 曲线！")
             return
 
         self.btn_plot.setEnabled(False)
         self.btn_plot.setText("⏳ 正在绘图...")
         self.log_area.clear()
-        self.log(">>> 开始执行绘图流程...")
+        self.log(">>> 开始执行多曲线绘图流程...")
 
-        # 收集所有参数
-        plot_params = {
-            'color': self.line_color,
-            'width': self.line_width.value(),
-            'type': self.line_type.currentText().split(' ')[0] # 提取 'l', 's' 等
-        }
+        curves_config = [w.get_config() for w in self.curve_widgets]
+        
         save_params = {
             'image_name': self.image_name_edit.text(),
             'project_name': self.project_name_edit.text()
         }
 
-        # 启动后台线程
         self.worker = PlotWorker(
             file_path=self.drop_area.file_path,
             col_x=self.combo_x.currentText(),
-            col_y=self.combo_y.currentText(),
-            plot_params=plot_params,
+            curves_config=curves_config,
             x_params=self.x_settings.get_config_params(),
             y_params=self.y_settings.get_config_params(),
             legend_params=self.legend_settings.get_legend_params(),
@@ -588,10 +693,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    
-    # 设置全局样式
     app.setStyle("Fusion")
-    
     window = MainWindow()
     window.show()
     sys.exit(app.exec())
