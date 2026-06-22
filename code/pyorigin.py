@@ -2,7 +2,6 @@
 
 此文件不要修改
 此文件为底层实现,不可修改
-用户可编辑的.py文件为plot.py main.py data_deal.py,在里面编辑自己的绘图函数
 
 """
 
@@ -11,7 +10,7 @@ import originpro as op
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import ClassVar
-
+import re
 
 """坐标轴类"""
 @dataclass
@@ -33,6 +32,7 @@ class AxisConfig:
     axis_font: str                          = 'Times New Roman' # 刻度数字的字体名称
     axis_color: str | tuple[int,int,int]    = 'black'           # 坐标轴及刻度数字颜色，支持颜色名称或RGB元组
     axis_ticks: str                         = 'inner'           # 刻度朝向，'inner'朝内，'outer'朝外
+    axis_show:int                           = 3                 #  0不显示,1显示左下前,2显示右上后,3都显示
 
     # ========== 坐标轴范围设置 ==========
     begin: float | None                     = None              # 坐标轴起始值，None表示自动
@@ -51,20 +51,24 @@ class AxisConfig:
 
 
     def __post_init__(self):
+        
         self._title_font_id  = op.lt_int(f'font({self.title_font})')
-        self._title_color_id = op.lt_int(f'color({self.title_color})')
+
+        safe_title_color = _parse_origin_color(self.title_color)
+        self._title_color_id = op.lt_int(f'color({safe_title_color})')
 
         self._axis_font_id   = op.lt_int(f'font({self.axis_font})')
-        self._axis_color_id  = op.lt_int(f'color({self.axis_color})')
+
+        safe_axis_color = _parse_origin_color(self.axis_color)
+        self._axis_color_id  = op.lt_int(f'color({safe_axis_color})')
+
         self._axis_ticks_id  = self._FONT.get(self.axis_ticks, 5)
 
-
-    # axis: X is the bottom X axis, X2 is the top X axis, Y is the left Y axis, Y2 is the right Y axis, Z is the front Z axis, Z2 is the back Z axis, Zh is the ZhX axis, Zh2 is the back ZhY axis, and Zh3 is the back ZhZ axis.
+    # axis:所有的参数
+    # X:底部, X2:顶部, Y:左边, Y2:右边, Z:前面, Z2:后面
+    # Zh is the ZhX axis, Zh2 is the back ZhY axis, and Zh3 is the back ZhZ axis.
     def axis_set(self,axis:str,lay:op.GLayer):
         
-        # 坐标轴标题
-        lay.axis(axis).title = self.title
-
         # 坐标轴厚度
         lay.set_float(f'{axis}.thickness', self.axis_thickness)
         
@@ -79,17 +83,21 @@ class AxisConfig:
     
         # 刻度朝向
         lay.set_int(f'{axis}.ticks', self._axis_ticks_id)
-    
-        # 自动设置坐标轴的范围
-        lay.rescale()
 
+        # 刻度显示
+        lay.set_int(f'{axis}.showAxes',self.axis_show)
+    
+        # 设置颜色
+        lay.set_int(f'{axis}.color',self._axis_color_id)
+        
         # 手动设置坐标轴范围
         lay.axis(axis).set_limits(self.begin, self.end, self.step)
 
-    # text:xb,yl,xt,yr
+    # text:xb,yl,xt,yr,zb,zf
     def title_set(self,text:str,lay:op.GLayer):
 
         label = lay.label(text)
+        label.set_str('text',self.title)
         label.set_int('font', self._title_font_id)
         label.set_int('fsize', self.title_font_size)
         label.set_int('color', self._title_color_id)
@@ -101,22 +109,22 @@ class AxisConfig:
     # 加粗设置
     def _bold_set(self,text):
 
-        name = op.get_lt_str(f'{text}.text$')
         if self.title_bold:
+            name = op.get_lt_str(f'{text}.text$')
             op.lt_exec(f'{text}.text$="\\b({name})"')
 
     # 斜体设置
     def _italic_set(self,text):
 
-        name = op.get_lt_str(f'{text}.text$')
         if self.title_italic:
+            name = op.get_lt_str(f'{text}.text$')
             op.lt_exec(f'{text}.text$="\\i({name})"')
 
     # 下划线设置
     def _underline_set(self,text):
 
-        name = op.get_lt_str(f'{text}.text$')
         if self.title_underline:
+            name = op.get_lt_str(f'{text}.text$')
             op.lt_exec(f'{text}.text$="\\u({name})"')
 
 
@@ -127,6 +135,8 @@ class TextConfig:
     font: str                           = 'Times New Roman' # 图例文本字体名称
     color: str | tuple[int, int, int]   = 'black'           # 图例文本颜色，支持颜色名称或RGB元组,如color = (0,231,123)
     bold: int                           = 1                 # 图例文本是否加粗，1为加粗，0为不加粗
+    italic:int                          = 0                 # 图例文本是否斜体，1为斜体，0不为斜体
+    underline:int                       = 0                 # 图例文本是否加下划线，1加下划线，0不加下划线
     font_size: int                      = 26                # 图例文本字体大小（磅值）
     background: int                     = 0                 # 图例背景透明度，0为透明背景，其他值为不同背景样式
     
@@ -134,114 +144,103 @@ class TextConfig:
     _font_id: int = field(init=False, repr=False)       # 字体在Origin中的内部ID
     _color_id: int = field(init=False, repr=False)      # 颜色在Origin中的内部ID
     
-
-    # ========== 策略映射表：根据 (是否有标题, 是否加粗) 的组合选择对应的格式化方法 ==========
-    # (True, True)  -> 有标题且加粗：使用 \l() \b() 格式
-    # (True, False) -> 有标题不加粗：使用 \l() 格式
-    # (False, True) -> 无标题但加粗：使用 \l() \b(%()) 格式（用数据源名称）
-    # (False, False)-> 无标题不加粗：返回None，不修改默认图例
-    _strategy_map: ClassVar[dict] = {
-        (True, True):  '_fmt_title_bold',
-        (True, False): '_fmt_title_no',
-        (False, True): '_fmt_no_bold',
-        (False, False): '_fmt_default',
-    }
-
     def __post_init__(self):
         self._font_id = op.lt_int(f'font({self.font})')
-        self._color_id = op.lt_int(f'color({self.color})')
+
+        safe_color = _parse_origin_color(self.color)
+        self._color_id = op.lt_int(f'color({safe_color})')
 
         # 检查self.title是否是字符串类型，如果是，将其转换成列表
         if isinstance(self.title, str):
             self.title = [self.title]
 
-    def text_set(self, text: str, lay: op.GLayer):
+    def text_set(self,text:str,lay:op.GLayer):
 
         label = lay.label(text)
+    
+        label.set_str('text',self.__legend_format_set())
         label.set_int('font', self._font_id)
         label.set_int('fsize', self.font_size)
         label.set_int('color', self._color_id)
         label.set_int('background', self.background)
-        self._execute(text)
 
-    # ================= 核心执行引擎 (模板方法) =================
-
-    def _execute(self,text:str):
-        
-        key = (bool(self.title), bool(self.bold))
-        
-        strategy_name = self._strategy_map.get(key, '_fmt_default')
-        formatter = getattr(self, strategy_name)
-        
-        # 获取格式化后的文本
-        full_text = formatter()
-        
-        # 如果策略返回 None (如 default 状态)，则跳过执行
-        if full_text is None:
-            return
-
-        op.lt_exec(f'{text}.text$="{full_text}"')
-
-
-    def _get_safe_title(self, index: int) -> str:
     
-        if self.title and index < len(self.title):
-            return self.title[index]
-        return f"Data {index + 1}" # 越界时的安全降级默认值
+    def __legend_format_set(self) -> str:
 
-    def _fmt_title_bold(self) -> str:
-       
-        op.lt_exec('layer -c;')
-        count = op.lt_int('count')
-        parts = [f"\\l({n+1}) \\b({self._get_safe_title(n)})" for n in range(count)]
-        return "\n".join(parts)
+        # op.lt_exec('layer -c;')
+        # count = op.lt_int('count')
+        contend = op.get_lt_str(f'legend.text$')
 
-    def _fmt_title_no(self) -> str:
+        results = []
+    
+        # 优化：先过滤掉空行，确保行索引(i)与列表的索引严格对应
+        lines = [line.strip() for line in contend.strip().splitlines() if line.strip()]
+
+        for i, line in enumerate(lines):
+            # ========== 第一步：提取与分离 ==========
+            # 1. 提取 \l(序号) 部分
+            l_match = re.search(r'(\\l\(\d+\))', line)
+            l_part = l_match.group(1) if l_match else ''
         
-        op.lt_exec('layer -c;')
-        count = op.lt_int('count')
-        parts = [f"\\l({n+1}) {self._get_safe_title(n)}" for n in range(count)]
-        return "\n".join(parts)
+            # 2. 提取纯数据内容
+            rest = line.split(')', 1)[-1] if ')' in line else line
+            extracted_data = rest.replace('%','').replace('(', '').replace(')', '').strip()
 
-    def _fmt_no_bold(self) -> str:
+            # 判断是否使用列表中的指定数据覆盖
+            if self.title is not None and i < len(self.title):
+                data = str(self.title[i]).strip()
+            else:
+                data = f'\\%({extracted_data})' # 使用原标题
+            
+            # ========== 带格式符的拼接 ==========
+            if self.bold:
+                data_part = f'\\b({data})'
+            else:
+                data_part = f'{data}'
+
+            if self.italic:
+                data_part = f'\\i({data_part})'
+            
+            if self.underline:
+                data_part = f'\\u({data_part})'
+            
+            results.append(f'{l_part} {data_part}')
         
-        op.lt_exec('layer -c;')
-        count = op.lt_int('count')
-        parts = [f"\\l({n+1}) \\b(%({n+1}))" for n in range(count)]
-        return "\n".join(parts)
+        return '\n'.join(results)
 
-    def _fmt_default(self) -> str | None:
-        
-        return None
-
+@dataclass
 class LayConfig:
-    
-    def __init__(
-        self,
-        x: AxisConfig        = None,    # X轴配置对象，为None时使用默认配置（标题为'x'）
-        y: AxisConfig        = None,    # Y轴配置对象，为None时使用默认配置（标题为'y'）
-        legend: TextConfig   = None,    # 图例配置对象，为None时使用默认配置
-        frame: int           = 1,       # 是否显示图层边框，1为显示，0为不显示
-        aa: int              = 1,       # 是否开启抗锯齿，1为开启，0为关闭
-    ):
-        self.x          = x or AxisConfig(title='x')    # 实际使用的X轴配置实例
-        self.y          = y or AxisConfig(title='y')    # 实际使用的Y轴配置实例
-        self.legend     = legend or TextConfig()        # 实际使用的图例配置实例
-        
-        self.frame      = frame                         # 图层边框显示状态
-        self.aa         = aa                            # 抗锯齿开关状态
+   
+    x: AxisConfig | None            = None
+    y: AxisConfig | None            = None
+    legend: TextConfig | None       = None
+    frame: int                      = 1
+    aa: int                         = 1
+
+    def __post_init__(self):
+        if self.x is None:
+            self.x = AxisConfig(title='x')
+        if self.y is None:
+            self.y = AxisConfig(title='y')
+        if self.legend is None:
+            self.legend = TextConfig()
 
 
 # 函数功能说明：配置一个图层的参数
 def lay_set(Graph: op.GPage, lay: op.GLayer, config: LayConfig):
 
     lay.activate()
+
+    # 自动设置坐标轴的范围
+    lay.rescale()
     
     config.x.axis_set('x',lay)
-    config.x.title_set('xb',lay)
     config.y.axis_set('y',lay)
-    config.y.title_set('yl',lay)
+    config.x.axis_set('x2',lay)
+    config.y.axis_set('y2',lay)
 
+    config.x.title_set('xb',lay)
+    config.y.title_set('yl',lay)
 
     config.legend.text_set('legend',lay)
 
@@ -266,6 +265,28 @@ def plot_set(
     plot.set_float('line.width', width)  # 设置线宽
     plot.color = color
 
+def _parse_origin_color(color_input):
+    """
+    将多种颜色输入格式统一转换为 Origin LabTalk 支持的十六进制字符串
+    支持: RGB元组 (255,0,0), 颜色名称 'red', 十六进制 '#FF0000'
+    """
+    # 如果已经是合法的十六进制字符串，直接返回
+    if isinstance(color_input, str):
+        if color_input.startswith('#') and len(color_input) == 7:
+            return color_input
+        # 如果是颜色名称如 'red', 'blue'，Origin原生支持，直接返回
+        return color_input
+    
+    # 如果是 RGB 元组或列表，转换为十六进制
+    if isinstance(color_input, (tuple, list)) and len(color_input) == 3:
+        try:
+            r, g, b = [int(c) for c in color_input]
+            return f"#{r:02x}{g:02x}{b:02x}"
+        except (ValueError, TypeError):
+            pass
+            
+    # 兜底默认黑色
+    return "#000000"
 
 # 函数功能说明：保存图像,目前支持.png格式
 def graph_save(
