@@ -416,7 +416,12 @@ class MainWindow(QMainWindow):
         self.line_width.setRange(0.1, 10.0)
         self.line_width.setValue(3.0)
         self.line_type = QComboBox()
-        self.line_type.addItems(['l (实线)', 's (散点)', 'ls (线+点)'])
+        self.line_type.addItems([ 
+            'l (折线图)', 
+            's (散点图)', 
+            'y (点线图)', 
+            'c (柱状图)'
+            ])
 
         data_form.addRow("X 轴数据列:", self.combo_x)
         data_form.addRow("Y 轴数据列:", self.combo_y)
