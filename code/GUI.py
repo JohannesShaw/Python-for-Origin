@@ -1,5 +1,5 @@
 """
-这个文件用于绘制交互界面 (支持多数据线独立X/Y轴绑定优化版 - 面积平衡版)
+这个文件用于绘制交互界面
 """
 import sys
 import pandas as pd
@@ -22,6 +22,19 @@ try:
     ORIGIN_AVAILABLE = True
 except ImportError:
     ORIGIN_AVAILABLE = False
+
+# ================= 字体配置区 =================
+# 直接使用字体原名列表，去除了 Helvetica，中文字体保留中文名测试
+FONT_LIST = [
+    "Times New Roman", 
+    "Arial", 
+    "Calibri", 
+    "Courier New", 
+    "宋体", 
+    "黑体", 
+    "微软雅黑"
+]
+# ==============================================
 
 
 class DropArea(QLabel):
@@ -200,7 +213,7 @@ class AxisSettingsWidget(QWidget):
         title_form = QFormLayout()
         self.title_edit = QLineEdit("")
         self.title_font = QComboBox()
-        self.title_font.addItems(['Times New Roman', 'Arial', 'Courier New', 'Helvetica'])
+        self.title_font.addItems(FONT_LIST)  # 使用全局字体列表
         self.title_color_btn = QPushButton("选择颜色")
         self.title_color_btn.clicked.connect(self.choose_title_color)
         self.title_color = (0, 0, 0) 
@@ -238,7 +251,7 @@ class AxisSettingsWidget(QWidget):
         self.axis_pt.setRange(8, 100)
         self.axis_pt.setValue(26)
         self.axis_font = QComboBox()
-        self.axis_font.addItems(['Times New Roman', 'Arial', 'Courier New', 'Helvetica'])
+        self.axis_font.addItems(FONT_LIST)  # 使用全局字体列表
         self.axis_color_btn = QPushButton("选择颜色")
         self.axis_color_btn.clicked.connect(self.choose_axis_color)
         self.axis_color = (0, 0, 0)
@@ -298,6 +311,7 @@ class AxisSettingsWidget(QWidget):
         show_map = {0: 0, 1: 1, 2: 2, 3: 3}
         return {
             'title': self.title_edit.text(),
+            # 直接获取下拉框的文本原名
             'title_font': self.title_font.currentText(),
             'title_color': self.title_color,
             'title_bold': 1 if self.title_bold.isChecked() else 0,
@@ -307,6 +321,7 @@ class AxisSettingsWidget(QWidget):
             'axis_thickness': self.axis_thickness.value(),
             'axis_bold': 1 if self.axis_bold.isChecked() else 0,
             'axis_pt': self.axis_pt.value(),
+            # 直接获取下拉框的文本原名
             'axis_font': self.axis_font.currentText(),
             'axis_color': self.axis_color,
             'axis_ticks': self.axis_ticks.currentText(),
@@ -326,9 +341,9 @@ class LegendSettingsWidget(QWidget):
         legend_group = QGroupBox("图例 (Legend) 设置")
         legend_form = QFormLayout()
         self.legend_title = QLineEdit("")
-        self.legend_title.setPlaceholderText("多曲线图例请用逗号分隔，留空则默认使用Y轴列名")
+        self.legend_title.setPlaceholderText("多曲线图例请用逗号分隔,留空则默认使用Y轴列名")
         self.legend_font = QComboBox()
-        self.legend_font.addItems(['Times New Roman', 'Arial', 'Courier New', 'Helvetica'])
+        self.legend_font.addItems(FONT_LIST)  # 使用全局字体列表
         self.legend_color_btn = QPushButton("选择颜色")
         self.legend_color_btn.clicked.connect(self.choose_color)
         self.legend_color = (0, 0, 0)
@@ -382,6 +397,7 @@ class LegendSettingsWidget(QWidget):
         
         return {
             'title': title_list,
+            # 直接获取下拉框的文本原名
             'font': self.legend_font.currentText(),
             'color': self.legend_color,
             'bold': 1 if self.legend_bold.isChecked() else 0,
@@ -399,7 +415,7 @@ class LegendSettingsWidget(QWidget):
 
 
 class PlotWorker(QThread):
-    """后台绘图线程，支持多曲线独立X/Y轴绘制"""
+    """后台绘图线程,支持多曲线独立X/Y轴绘制"""
     log_signal = Signal(str)
     finished_signal = Signal(bool, str)
 
@@ -482,7 +498,7 @@ class PlotWorker(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Origin 自动化绘图 GUI (多曲线独立X/Y轴版)")
+        self.setWindowTitle("Origin 自动化绘图 GUI")
         self.resize(1050, 750)
         self.df_columns = []
         self.curve_widgets = []
@@ -536,7 +552,7 @@ class MainWindow(QMainWindow):
         save_form = QFormLayout()
         save_form.setContentsMargins(10, 15, 10, 5)
         self.image_name_edit = QLineEdit("output.png")
-        self.project_name_edit = QLineEdit("template_gui.opju")
+        self.project_name_edit = QLineEdit("project.opju")
         save_form.addRow("图片名称:", self.image_name_edit)
         save_form.addRow("工程名称:", self.project_name_edit)
         save_group.setLayout(save_form)
