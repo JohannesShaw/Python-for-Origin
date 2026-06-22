@@ -1,5 +1,5 @@
 """
-这个文件用于绘制交互界面 (支持多数据线绘制优化版 - 修复图例联动Bug)
+这个文件用于绘制交互界面 (支持多数据线绘制优化版 - 界面布局优化)
 """
 import sys
 import pandas as pd
@@ -29,23 +29,28 @@ class DropArea(QLabel):
     file_dropped = Signal(str)
 
     def __init__(self):
-        super().__init__("拖拽数据文件到此处\n或点击选择文件 (.csv, .txt, .xlsx)")
+        super().__init__("📂 拖拽数据文件到此处\n或点击选择文件 (.csv, .txt, .xlsx)")
         self.setAcceptDrops(True)
         self.setAlignment(Qt.AlignCenter)
+        # 【优化】：增加 padding，增大字体，提升视觉比重
         self.setStyleSheet("""
             QLabel {
-                border: 2px dashed #aaa; 
-                border-radius: 5px; 
-                padding: 20px; 
-                color: #666;
-                background-color: #f9f9f9;
+                border: 3px dashed #bbb; 
+                border-radius: 10px; 
+                padding: 40px; 
+                color: #555;
+                font-size: 15px;
+                font-weight: bold;
+                background-color: #fcfcfc;
             }
             QLabel:hover {
-                border: 2px dashed #4CAF50;
+                border: 3px dashed #4CAF50;
                 background-color: #f1f8e9;
+                color: #2e7d32;
             }
         """)
-        self.setMinimumHeight(100)
+        # 【优化】：大幅提升最小高度
+        self.setMinimumHeight(180)
         self.file_path = None
 
     def dragEnterEvent(self, event: QDragEnterEvent):
@@ -70,13 +75,15 @@ class DropArea(QLabel):
 
     def set_file(self, file_path):
         self.file_path = file_path
-        self.setText(f"已选择: {Path(file_path).name}")
+        self.setText(f"✅ 已选择: {Path(file_path).name}")
         self.setStyleSheet("""
             QLabel {
-                border: 2px solid #4CAF50; 
-                border-radius: 5px; 
-                padding: 20px; 
-                color: #333; 
+                border: 3px solid #4CAF50; 
+                border-radius: 10px; 
+                padding: 40px; 
+                color: #1b5e20; 
+                font-size: 16px;
+                font-weight: bold;
                 background-color: #e8f5e9;
             }
         """)
@@ -93,52 +100,50 @@ class CurveItemWidget(QWidget):
         self.index = index
         
         layout = QHBoxLayout()
-        layout.setContentsMargins(0, 5, 0, 5)
+        layout.setContentsMargins(0, 2, 0, 2) # 稍微减少内部边距以节省空间
         self.setLayout(layout)
         
         # Y列选择
         self.combo_y = QComboBox()
         self.combo_y.addItems(columns)
         self.combo_y.setMinimumWidth(100)
-        # 【修复Bug】：使用 lambda 忽略 currentTextChanged 传递的字符串参数，确保信号正常触发
         self.combo_y.currentTextChanged.connect(lambda _: self.changed.emit())
         
-        # 颜色选择 (默认黑色，由用户手动选择)
+        # 颜色选择
         self.line_color = (0, 0, 0)
-        self.line_color_btn = QPushButton("选择颜色")
-        self.line_color_btn.setFixedWidth(80)
+        self.line_color_btn = QPushButton("颜色")
+        self.line_color_btn.setFixedWidth(50)
         self.line_color_btn.clicked.connect(self.choose_color)
         
         # 线宽
         self.line_width = QDoubleSpinBox()
         self.line_width.setRange(0.1, 10.0)
         self.line_width.setValue(3.0)
-        self.line_width.setFixedWidth(60)
+        self.line_width.setFixedWidth(55)
         
         # 图表类型
         self.line_type = QComboBox()
         self.line_type.addItems([ 
-            'l (折线图)', 
-            's (散点图)', 
-            'y (点线图)', 
-            'c (柱状图)'
+            'l (折线)', 
+            's (散点)', 
+            'y (点线)', 
+            'c (柱状)'
         ])
-        self.line_type.setFixedWidth(90)
+        self.line_type.setFixedWidth(75)
         
         # 删除按钮
         self.btn_remove = QPushButton("✕")
-        self.btn_remove.setFixedSize(25, 25)
+        self.btn_remove.setFixedSize(22, 22)
         self.btn_remove.setStyleSheet("color: red; font-weight: bold; border: none;")
         self.btn_remove.clicked.connect(lambda: self.removed.emit(self))
         
         # 组装布局
-        layout.addWidget(QLabel(f"线{index + 1} Y列:"))
+        layout.addWidget(QLabel(f"线{index + 1}:"))
         layout.addWidget(self.combo_y)
         layout.addWidget(self.line_color_btn)
         layout.addWidget(self.line_width)
         layout.addWidget(self.line_type)
         layout.addWidget(self.btn_remove)
-        layout.addStretch()
 
     def choose_color(self):
         color = QColorDialog.getColor(QColor(*self.line_color), self, "选择曲线颜色")
@@ -156,7 +161,7 @@ class CurveItemWidget(QWidget):
 
 
 class AxisSettingsWidget(QWidget):
-    """坐标轴参数设置组件 (对应 pyorigin.py 中的 AxisConfig)"""
+    """坐标轴参数设置组件"""
     def __init__(self, title="Axis"):
         super().__init__()
         layout = QVBoxLayout()
@@ -466,48 +471,56 @@ class MainWindow(QMainWindow):
         # 1. 文件导入区
         self.drop_area = DropArea()
         self.drop_area.file_dropped.connect(self.on_file_loaded)
-        left_layout.addWidget(self.drop_area)
+        # 【优化】：设置 stretch=3，让 DropArea 占据更多垂直空间
+        left_layout.addWidget(self.drop_area, stretch=3)
 
         # 2. X轴数据列设置 (全局唯一)
         x_group = QGroupBox("X 轴数据设置")
         x_form = QFormLayout()
+        x_form.setContentsMargins(10, 15, 10, 5)
         self.combo_x = QComboBox()
-        # 【修复Bug】：使用 lambda 忽略参数
         self.combo_x.currentTextChanged.connect(lambda _: self.on_column_changed())
         x_form.addRow("X 轴数据列:", self.combo_x)
         x_group.setLayout(x_form)
-        left_layout.addWidget(x_group)
+        left_layout.addWidget(x_group, stretch=0)
 
         # 3. 多曲线 Y轴数据设置 (动态容器)
         curves_group = QGroupBox("Y 轴数据与曲线设置 (支持多条)")
         curves_main_layout = QVBoxLayout()
+        curves_main_layout.setContentsMargins(10, 15, 10, 5)
         
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setMinimumHeight(150)
+        # 【优化】：大幅压缩滚动区域的最小高度，节省界面面积
+        scroll.setMinimumHeight(85) 
+        scroll.setStyleSheet("QScrollArea { border: 1px solid #ddd; border-radius: 4px; }")
         scroll_widget = QWidget()
         self.curves_layout = QVBoxLayout(scroll_widget)
+        self.curves_layout.setContentsMargins(5, 5, 5, 5)
+        self.curves_layout.setSpacing(2)
         self.curves_layout.setAlignment(Qt.AlignTop)
         scroll.setWidget(scroll_widget)
         curves_main_layout.addWidget(scroll)
         
         self.btn_add_curve = QPushButton("+ 添加曲线")
-        self.btn_add_curve.setStyleSheet("color: #2196F3; font-weight: bold; border: 1px dashed #2196F3; padding: 5px;")
+        self.btn_add_curve.setStyleSheet("color: #2196F3; font-weight: bold; border: 1px dashed #2196F3; padding: 4px;")
         self.btn_add_curve.clicked.connect(self.add_curve_widget)
         curves_main_layout.addWidget(self.btn_add_curve)
         
         curves_group.setLayout(curves_main_layout)
-        left_layout.addWidget(curves_group)
+        # 【优化】：设置 stretch=1，限制其空间扩张
+        left_layout.addWidget(curves_group, stretch=1)
 
         # 4. 保存设置
         save_group = QGroupBox("保存设置")
         save_form = QFormLayout()
+        save_form.setContentsMargins(10, 15, 10, 5)
         self.image_name_edit = QLineEdit("output.png")
         self.project_name_edit = QLineEdit("template_gui.opju")
         save_form.addRow("图片名称:", self.image_name_edit)
         save_form.addRow("工程名称:", self.project_name_edit)
         save_group.setLayout(save_form)
-        left_layout.addWidget(save_group)
+        left_layout.addWidget(save_group, stretch=0)
 
         # 5. 执行按钮
         self.btn_plot = QPushButton("🚀 开始绘图")
@@ -521,7 +534,7 @@ class MainWindow(QMainWindow):
             QPushButton:disabled { background-color: #cccccc; }
         """)
         self.btn_plot.clicked.connect(self.start_plotting)
-        left_layout.addWidget(self.btn_plot)
+        left_layout.addWidget(self.btn_plot, stretch=0)
 
         # ================= 右侧面板 =================
         right_widget = QWidget()
@@ -545,7 +558,7 @@ class MainWindow(QMainWindow):
         self.log_area = QTextEdit()
         self.log_area.setReadOnly(True)
         self.log_area.setPlaceholderText("运行日志将显示在这里...")
-        self.log_area.setMaximumHeight(150)
+        self.log_area.setMaximumHeight(120)
         main_layout.addWidget(self.log_area)
 
         self.worker = None
@@ -603,7 +616,7 @@ class MainWindow(QMainWindow):
         
         for i, w in enumerate(self.curve_widgets):
             w.index = i
-            w.layout().itemAt(0).widget().setText(f"线{i + 1} Y列:")
+            w.layout().itemAt(0).widget().setText(f"线{i + 1}:")
             
         self.update_remove_buttons_state()
         self.on_column_changed()
@@ -618,23 +631,17 @@ class MainWindow(QMainWindow):
         """智能联动更新标题和图例 (带防覆盖机制)"""
         x_col = self.combo_x.currentText()
         if x_col:
-            # 只有当X轴标题为空，或者是默认的列名时，才自动更新，防止覆盖用户手写的自定义X轴标题
             if not self.x_settings.title_edit.text() or self.x_settings.title_edit.text() in self.df_columns:
                 self.x_settings.title_edit.setText(x_col)
             
-        # 收集所有Y列
         y_cols = [w.combo_y.currentText() for w in self.curve_widgets if w.combo_y.currentText()]
         if y_cols:
-            # Y轴标题默认使用第一个Y列 (带防覆盖机制)
             if not self.y_settings.title_edit.text() or self.y_settings.title_edit.text() in self.df_columns:
                 self.y_settings.title_edit.setText(y_cols[0])
                 
-            # 图例智能联动 (带防覆盖机制)
             current_legend = self.legend_settings.legend_title.text().strip()
             current_legend_list = [t.strip() for t in current_legend.split(',')] if current_legend else []
             
-            # 判断当前图例框里的内容是否全都是“数据列名”（即系统自动生成的）
-            # 如果用户手动输入了非列名的自定义图例（如 "实验组, 对照组"），则不再强制覆盖
             is_auto_generated = all(item in self.df_columns for item in current_legend_list) if current_legend_list else True
             
             if is_auto_generated:
