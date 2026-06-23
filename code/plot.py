@@ -36,23 +36,23 @@ def template(input_file,output_file):
     gp1 = po.create_graph()                # 新建一个图(该图默认只有一个图层)
     lay1 = gp1[0]                       # 取该图的第一个图层绘图(默认只有一个图层)
 
-#------------------------参数设置------------------------
+    #------------------------参数设置------------------------
 
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
 
     po.lay_set(gp1,lay1,po.LayConfig())
     
-#------------------------参数设置------------------------
+    #------------------------参数设置------------------------
 
     print("绘图完成")
 
-#------------------------保存设置------------------------
+    #------------------------保存设置------------------------
 
     po.graph_save(gp1,output_file)
   
     po.project_save('template1.opju')
 
-#------------------------保存设置------------------------
+    #------------------------保存设置------------------------
 
     # 关闭 Origin 应用程序
     #op.exit()                           
@@ -82,7 +82,7 @@ def plot_time_x(input_file, output_file1, output_file2):
 
     gp1 = po.create_graph()
     lay1 = gp1[0]
-#------------------------参数设置------------------------
+    #------------------------参数设置------------------------
 
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
 
@@ -96,18 +96,21 @@ def plot_time_x(input_file, output_file1, output_file2):
 
     po.lay_set(gp1,lay2,po.LayConfig())
 
-#------------------------参数设置------------------------
+    #------------------------参数设置------------------------
 
     print("绘图完成")
 
-#------------------------保存设置------------------------
+    #------------------------保存设置------------------------
 
     po.graph_save(gp1,output_file1)
     po.graph_save(gp2,output_file2)
 
     po.project_save('template2.opju')
 
-#------------------------保存设置------------------------
+    #------------------------保存设置------------------------
+
+    # 关闭 Origin 应用程序
+    #op.exit()
 
     
 #在一个图绘制两条线的示例
@@ -137,7 +140,7 @@ def plot_two_lines(input_file,input_file1,output_file):
     gp1 = po.create_graph()
     lay1 = gp1[0]
 
-#------------------------参数设置------------------------
+    #------------------------参数设置------------------------
 
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
 
@@ -145,17 +148,17 @@ def plot_two_lines(input_file,input_file1,output_file):
 
     po.lay_set(gp1,lay1,po.LayConfig())
 
-#------------------------参数设置------------------------
+    #------------------------参数设置------------------------
 
     print("绘图完成")
 
-#------------------------保存设置------------------------
+    #------------------------保存设置------------------------
 
     po.graph_save(gp1,output_file)
 
     po.project_save('template3.opju')
 
-#------------------------保存设置------------------------
+    #------------------------保存设置------------------------
     # 关闭 Origin 应用程序
     #op.exit()  
     
@@ -190,7 +193,7 @@ def plot_two_in_graph(input_file,output_file):
     lay1 = gp[0]
     lay2 = gp[1]
 
-#------------------------参数设置------------------------
+    #------------------------参数设置------------------------
 
     po.plot_set(wks, lay1, colx='Time(ns)', coly='Voltage(V)', color='black', width=3, type='l')
     po.plot_set(wks, lay2, colx='Time(ns)', coly='Current(A)', color='black', width=3, type='l')
@@ -198,16 +201,16 @@ def plot_two_in_graph(input_file,output_file):
     po.lay_set(gp,lay1,po.LayConfig())
     po.lay_set(gp,lay2,po.LayConfig())
 
-#------------------------参数设置------------------------
+    #------------------------参数设置------------------------
 
     print("绘图完成")
     
-#------------------------保存设置------------------------
+    #------------------------保存设置------------------------
 
     po.graph_save(gp,output_file)
 
     po.project_save('template4.opju')
-#------------------------保存设置------------------------
+    #------------------------保存设置------------------------
 
     # 关闭 Origin 应用程序
     #op.exit()  
