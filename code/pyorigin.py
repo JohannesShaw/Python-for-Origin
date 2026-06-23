@@ -1,16 +1,39 @@
 """
-
-此文件不要修改
-此文件为底层实现,不可修改
-
+此文件为底层实现, 优化了打包环境下的路径兼容性和控制台输出安全性
 """
 
+import sys
 import pandas as pd
 import originpro as op
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import ClassVar
 import re
+
+# ================= 核心优化 1：安全打印与路径基准 =================
+
+def safe_print(*args, **kwargs):
+    """防止在打包为无控制台(-w)模式时，print导致程序崩溃"""
+    try:
+        if sys.stdout is not None:
+            print(*args, **kwargs)
+    except Exception:
+        pass
+
+def get_base_dir() -> Path:
+    """
+    获取程序运行的基准目录。
+    - 开发环境：返回当前脚本所在的目录。
+    - 打包环境：返回 .exe 文件所在的目录（确保 data/image 等文件夹与 exe 同级即可）。
+    """
+    if getattr(sys, 'frozen', False):
+        # 打包后：exe 所在目录作为基准
+        return Path(sys.executable).resolve().parent
+    else:
+        # 开发时：当前脚本所在目录的上一级（保持与原代码逻辑一致）
+        return Path(__file__).resolve().parent.parent
+
+# ================================================================
 
 """坐标轴类"""
 @dataclass
@@ -309,9 +332,9 @@ def graph_save(
 
     if name.endswith('.png'):
         op.find_graph(graph.name).save_fig(path, replace=True, width=width, ratio=ratio)
-        print(f"图片文件保存成功😊,保存在{path}")
+        safe_print(f"图片文件保存成功😊,保存在{path}")
     else:
-        print("不支持该图片文件格式保存")
+        safe_print("不支持该图片文件格式保存")
 
 # 备份原生方法，防止被污染
 _original_new_graph = op.new_graph
@@ -362,9 +385,9 @@ def project_save(
 
     if name.endswith('.opju'):
         op.save(path)
-        print(f"工程文件保存成功😊,保存在{path}")
+        safe_print(f"工程文件保存成功😊,保存在{path}")
     else:
-        print("不支持该工程文件格式保存")
+        safe_print("不支持该工程文件格式保存")
 
 
 # 函数功能说明：读取数据
@@ -374,7 +397,11 @@ def read_data(
         ):
 
     if not path:
-        path = _path_set(name)
+        # 【优化】：支持传入绝对路径（GUI拖拽进来的通常是绝对路径）
+        if Path(name).is_absolute() and Path(name).exists():
+            path = str(name)
+        else:
+            path = _path_set(name)
     else:
         path = str(Path(path) / name)
 
@@ -406,26 +433,26 @@ def file_save(
     if name.endswith('.txt'):
         
         dataframe.to_csv(path, sep='\t', index=index, float_format=float_format)
-        print(f"文件保存成功,保存在{path}")
+        safe_print(f"文件保存成功,保存在{path}")
 
     elif name.endswith('.csv'):
 
         dataframe.to_csv(path, index=index, float_format=float_format)
-        print(f"文件保存成功,保存在{path}")
+        safe_print(f"文件保存成功,保存在{path}")
 
     else:
-        print("不支持该文件格式保存")
+        safe_print("不支持该文件格式保存")
 
 
 # 内部函数，用户不用关心，以及调用与使用
 def _path_set(file: str):
+    """基于 get_base_dir 获取资源绝对路径"""
+    base_dir = get_base_dir()
 
-    script_dir = Path(__file__).resolve().parent
-
-    data_dir     = script_dir.parent / "data"
-    image_dir    = script_dir.parent / "image"
-    template_dir = script_dir.parent / "my_template"
-    project_dir  = script_dir.parent / "project"
+    data_dir     = base_dir / "data"
+    image_dir    = base_dir / "image"
+    template_dir = base_dir / "my_template"
+    project_dir  = base_dir / "project"
 
     if file.endswith(('.txt', '.csv', '.xlsx')):
         file_path = data_dir / file
@@ -437,6 +464,7 @@ def _path_set(file: str):
         file_path = project_dir / file
     else:
         file_path = None
+        
     return str(file_path) if file_path is not None else None
 
 

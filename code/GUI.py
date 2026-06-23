@@ -19,12 +19,13 @@ from PySide6.QtGui import QDragEnterEvent, QDropEvent, QColor
 try:
     import pyorigin as po
     import originpro as op
+    # 【核心】：引入 pythoncom 用于多线程 COM 初始化，防止显示窗口时卡死
+    import pythoncom 
     ORIGIN_AVAILABLE = True
 except ImportError:
     ORIGIN_AVAILABLE = False
 
 # ================= 字体配置区 =================
-# 直接使用字体原名列表，去除了 Helvetica，中文字体保留中文名测试
 FONT_LIST = [
     "Times New Roman", 
     "Arial", 
@@ -45,7 +46,6 @@ class DropArea(QLabel):
         super().__init__("📂 拖拽数据文件到此处\n或点击选择文件 (.csv, .txt, .xlsx)")
         self.setAcceptDrops(True)
         self.setAlignment(Qt.AlignCenter)
-        # 【优化】：取中间值，padding 调整为 25px
         self.setStyleSheet("""
             QLabel {
                 border: 3px dashed #bbb; 
@@ -62,7 +62,6 @@ class DropArea(QLabel):
                 color: #2e7d32;
             }
         """)
-        # 【优化】：取中间值，最小高度调整为 140
         self.setMinimumHeight(140)
         self.file_path = None
 
@@ -89,7 +88,6 @@ class DropArea(QLabel):
     def set_file(self, file_path):
         self.file_path = file_path
         self.setText(f"✅ 已选择: {Path(file_path).name}")
-        # 【优化】：同步更新选中状态的 padding
         self.setStyleSheet("""
             QLabel {
                 border: 3px solid #4CAF50; 
@@ -129,7 +127,7 @@ class CurveItemWidget(QWidget):
         self.combo_x = QComboBox()
         self.combo_x.addItems(columns)
         if columns:
-            self.combo_x.setCurrentIndex(0) # 默认选第一列作为X
+            self.combo_x.setCurrentIndex(0)
         self.combo_x.currentTextChanged.connect(lambda _: self.changed.emit())
         
         row1_layout.addWidget(self.lbl_index)
@@ -138,27 +136,24 @@ class CurveItemWidget(QWidget):
         
         # ================= 第二行：Y 轴、颜色、线宽、线型、删除 =================
         row2_layout = QHBoxLayout()
-        row2_layout.setContentsMargins(20, 0, 0, 0) # 左侧缩进，形成层级感
+        row2_layout.setContentsMargins(20, 0, 0, 0)
         
         self.combo_y = QComboBox()
         self.combo_y.addItems(columns)
         if len(columns) > 1:
-            self.combo_y.setCurrentIndex(1) # 默认选第二列作为Y
+            self.combo_y.setCurrentIndex(1)
         self.combo_y.currentTextChanged.connect(lambda _: self.changed.emit())
         
-        # 颜色选择
         self.line_color = (0, 0, 0)
         self.line_color_btn = QPushButton("颜色")
         self.line_color_btn.setFixedWidth(50)
         self.line_color_btn.clicked.connect(self.choose_color)
         
-        # 线宽
         self.line_width = QDoubleSpinBox()
         self.line_width.setRange(0.1, 10.0)
         self.line_width.setValue(3.0)
         self.line_width.setFixedWidth(55)
         
-        # 图表类型
         self.line_type = QComboBox()
         self.line_type.addItems([ 
             'l (折线)', 
@@ -168,7 +163,6 @@ class CurveItemWidget(QWidget):
         ])
         self.line_type.setFixedWidth(75)
         
-        # 删除按钮
         self.btn_remove = QPushButton("✕")
         self.btn_remove.setFixedSize(22, 22)
         self.btn_remove.setStyleSheet("color: red; font-weight: bold; border: none;")
@@ -182,7 +176,6 @@ class CurveItemWidget(QWidget):
         row2_layout.addWidget(self.btn_remove)
         row2_layout.addStretch()
 
-        # 将两行加入主布局
         main_layout.addLayout(row1_layout)
         main_layout.addLayout(row2_layout)
 
@@ -208,12 +201,11 @@ class AxisSettingsWidget(QWidget):
         super().__init__()
         layout = QVBoxLayout()
         
-        # ========== 标题设置 ==========
         title_group = QGroupBox(f"{title} 标题设置")
         title_form = QFormLayout()
         self.title_edit = QLineEdit("")
         self.title_font = QComboBox()
-        self.title_font.addItems(FONT_LIST)  # 使用全局字体列表
+        self.title_font.addItems(FONT_LIST)
         self.title_color_btn = QPushButton("选择颜色")
         self.title_color_btn.clicked.connect(self.choose_title_color)
         self.title_color = (0, 0, 0) 
@@ -239,7 +231,6 @@ class AxisSettingsWidget(QWidget):
         title_group.setLayout(title_form)
         layout.addWidget(title_group)
 
-        # ========== 刻度与轴线设置 ==========
         axis_group = QGroupBox(f"{title} 刻度与轴线设置")
         axis_form = QFormLayout()
         self.axis_thickness = QDoubleSpinBox()
@@ -251,7 +242,7 @@ class AxisSettingsWidget(QWidget):
         self.axis_pt.setRange(8, 100)
         self.axis_pt.setValue(26)
         self.axis_font = QComboBox()
-        self.axis_font.addItems(FONT_LIST)  # 使用全局字体列表
+        self.axis_font.addItems(FONT_LIST)
         self.axis_color_btn = QPushButton("选择颜色")
         self.axis_color_btn.clicked.connect(self.choose_axis_color)
         self.axis_color = (0, 0, 0)
@@ -271,7 +262,6 @@ class AxisSettingsWidget(QWidget):
         axis_group.setLayout(axis_form)
         layout.addWidget(axis_group)
 
-        # ========== 范围设置 ==========
         range_group = QGroupBox(f"{title} 范围设置 (留空或0表示自动)")
         range_form = QFormLayout()
         self.begin_edit = QLineEdit("")
@@ -311,7 +301,6 @@ class AxisSettingsWidget(QWidget):
         show_map = {0: 0, 1: 1, 2: 2, 3: 3}
         return {
             'title': self.title_edit.text(),
-            # 直接获取下拉框的文本原名
             'title_font': self.title_font.currentText(),
             'title_color': self.title_color,
             'title_bold': 1 if self.title_bold.isChecked() else 0,
@@ -321,7 +310,6 @@ class AxisSettingsWidget(QWidget):
             'axis_thickness': self.axis_thickness.value(),
             'axis_bold': 1 if self.axis_bold.isChecked() else 0,
             'axis_pt': self.axis_pt.value(),
-            # 直接获取下拉框的文本原名
             'axis_font': self.axis_font.currentText(),
             'axis_color': self.axis_color,
             'axis_ticks': self.axis_ticks.currentText(),
@@ -343,7 +331,7 @@ class LegendSettingsWidget(QWidget):
         self.legend_title = QLineEdit("")
         self.legend_title.setPlaceholderText("多曲线图例请用逗号分隔,留空则默认使用Y轴列名")
         self.legend_font = QComboBox()
-        self.legend_font.addItems(FONT_LIST)  # 使用全局字体列表
+        self.legend_font.addItems(FONT_LIST)
         self.legend_color_btn = QPushButton("选择颜色")
         self.legend_color_btn.clicked.connect(self.choose_color)
         self.legend_color = (0, 0, 0)
@@ -397,7 +385,6 @@ class LegendSettingsWidget(QWidget):
         
         return {
             'title': title_list,
-            # 直接获取下拉框的文本原名
             'font': self.legend_font.currentText(),
             'color': self.legend_color,
             'bold': 1 if self.legend_bold.isChecked() else 0,
@@ -434,19 +421,23 @@ class PlotWorker(QThread):
             self.finished_signal.emit(False, "未检测到 pyorigin 或 originpro 库，无法绘图！")
             return
 
+        # 【核心】：在子线程中初始化 COM 环境，这是保证 Origin 窗口能正常显示且不卡死的关键
+        pythoncom.CoInitialize()
+        
         try:
             self.log_signal.emit("正在读取数据...")
+            # 直接传入绝对路径，避免底层路径解析出错
             df1 = po.read_data(self.file_path)
 
             self.log_signal.emit("正在启动 Origin 软件...")
-            op.set_show(True)
+            # 【已恢复】：显示 Origin 窗口，满足查看绘图过程的需求
+            op.set_show(True) 
             op.new()
 
             wb = op.new_book('w', 'Data')
             wks = wb.add_sheet()
             
             self.log_signal.emit("正在加载数据到工作表...")
-            # 收集所有不重复的 X 列和 Y 列
             cols_to_load = {}
             for curve in self.curves_config:
                 cols_to_load[curve['col_x']] = df1[curve['col_x']]
@@ -493,6 +484,9 @@ class PlotWorker(QThread):
         except Exception as e:
             self.log_signal.emit(f"❌ 发生错误: {str(e)}")
             self.finished_signal.emit(False, str(e))
+        finally:
+            # 【核心补充】：线程结束前清理 COM 环境
+            pythoncom.CoUninitialize()
 
 
 class MainWindow(QMainWindow):
@@ -514,20 +508,16 @@ class MainWindow(QMainWindow):
         left_widget = QWidget()
         left_layout = QVBoxLayout(left_widget)
         
-        # 1. 文件导入区
         self.drop_area = DropArea()
         self.drop_area.file_dropped.connect(self.on_file_loaded)
-        # 【优化】：权重从 3 降为 2
         left_layout.addWidget(self.drop_area, stretch=2)
 
-        # 2. 多曲线 X/Y 轴数据设置 (动态容器)
         curves_group = QGroupBox("曲线数据绑定 (支持多条独立 X/Y 轴)")
         curves_main_layout = QVBoxLayout()
         curves_main_layout.setContentsMargins(10, 15, 10, 5)
         
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        # 【优化】：最小高度提升至 150，给双行布局更充足的展示空间
         scroll.setMinimumHeight(150) 
         scroll.setStyleSheet("QScrollArea { border: 1px solid #ddd; border-radius: 4px; }")
         scroll_widget = QWidget()
@@ -544,10 +534,8 @@ class MainWindow(QMainWindow):
         curves_main_layout.addWidget(self.btn_add_curve)
         
         curves_group.setLayout(curves_main_layout)
-        # 【优化】：权重从 1 升为 2，与 DropArea 平分秋色
         left_layout.addWidget(curves_group, stretch=2)
 
-        # 3. 保存设置
         save_group = QGroupBox("保存设置")
         save_form = QFormLayout()
         save_form.setContentsMargins(10, 15, 10, 5)
@@ -558,7 +546,6 @@ class MainWindow(QMainWindow):
         save_group.setLayout(save_form)
         left_layout.addWidget(save_group, stretch=0)
 
-        # 4. 执行按钮
         self.btn_plot = QPushButton("🚀 开始绘图")
         self.btn_plot.setStyleSheet("""
             QPushButton {
@@ -664,20 +651,16 @@ class MainWindow(QMainWindow):
         if not self.curve_widgets:
             return
             
-        # 获取第一条曲线的 X 列作为全局 X 轴标题
         first_x_col = self.curve_widgets[0].combo_x.currentText()
         if first_x_col:
             if not self.x_settings.title_edit.text() or self.x_settings.title_edit.text() in self.df_columns:
                 self.x_settings.title_edit.setText(first_x_col)
             
-        # 收集所有曲线的 Y 列
         y_cols = [w.combo_y.currentText() for w in self.curve_widgets if w.combo_y.currentText()]
         if y_cols:
-            # Y轴标题默认使用第一个Y列
             if not self.y_settings.title_edit.text() or self.y_settings.title_edit.text() in self.df_columns:
                 self.y_settings.title_edit.setText(y_cols[0])
                 
-            # 图例智能联动
             current_legend = self.legend_settings.legend_title.text().strip()
             current_legend_list = [t.strip() for t in current_legend.split(',')] if current_legend else []
             
